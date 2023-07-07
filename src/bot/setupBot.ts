@@ -43,8 +43,4 @@ export default async () => {
   });
 
   await startBot(bot);
-
-  // test();
 };
-
-// https://discord.com/api/oauth2/authorize?client_id=1062828560332632195&permissions=8&scope=bot
