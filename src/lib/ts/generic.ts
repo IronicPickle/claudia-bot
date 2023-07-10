@@ -1,6 +1,10 @@
-export type Changelog = Record<string, ChangelogEntry>;
+import { Interaction } from "../../deps/discordeno.ts";
 
-export interface ChangelogEntry {
-  date: string;
-  changes: string[];
-}
+export type ArrayElement<ArrayType extends readonly unknown[]> =
+  ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+export type CommandOptions = Required<Required<Interaction>["data"]>["options"];
+
+export type CommandOption = ArrayElement<CommandOptions>;
+
+export type CommandValue = CommandOption["value"];

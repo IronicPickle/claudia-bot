@@ -3,8 +3,13 @@ import AudioPlayer from "../../lib/objects/AudioPlayer.ts";
 import { bot } from "../setupBot.ts";
 
 export default () => {
-  bot.eventManager.on("guildCreate", (_, { id }) => {
-    bot.audio.players[id.toString()] = new AudioPlayer(bot, id);
+  bot.eventManager.on("guildCreate", (_, { id, voiceStates }) => {
+    const player = new AudioPlayer(bot, id);
+    bot.audio.players[id.toString()] = player;
+
+    for (const [userId, voiceState] of voiceStates) {
+      player.updateVoiceUserChannel(userId, voiceState.channelId);
+    }
   });
 
   bot.eventManager.on("guildDelete", (_, id) => {
@@ -15,6 +20,10 @@ export default () => {
     "voiceStateUpdate",
     async (_, { channelId, sessionId, userId, guildId }) => {
       const player = bot.audio.players[guildId.toString()];
+
+      player.updateVoiceUserChannel(userId, channelId);
+
+      if (bot.id !== userId) return;
 
       if (!channelId) {
         player.closeSockets();
@@ -54,7 +63,7 @@ export default () => {
     const players = Object.values(bot.audio.players);
 
     for (const player of players) {
-      if (player.isSocketAlive()) player.sendPacket();
+      if (player.canDispatch()) player.dispatchPacket();
     }
 
     processPlayers(players);
@@ -68,7 +77,7 @@ export default () => {
         dipsatchPackets();
       }, nextTime - Date.now());
 
-    if (player.isSocketAlive()) player.preparePacket();
+    if (player.canPrepare()) player.preparePacket();
 
     setTimeout(() => processPlayers(players), 0);
   };

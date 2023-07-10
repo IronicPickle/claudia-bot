@@ -5,6 +5,7 @@ const botId = Deno.env.get("DISCORD_BOT_ID");
 
 const config: Config = {
   dataDir: Deno.env.get("DATA_DIR") ?? "/data",
+  tmpDir: Deno.env.get("TMP_DIR") ?? "/tmp",
   discord: {
     token: Deno.env.get("DISCORD_TOKEN"),
     botId: botId ? BigInt(botId) : undefined,

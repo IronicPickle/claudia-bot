@@ -212,6 +212,7 @@
     "https://deno.land/x/crypto_random_string@1.1.0/cryptoRandomString.ts": "301046e469dd9228171262b8c1ae31aa44ae1a7595ba0e2dbbc464819ad9aa43",
     "https://deno.land/x/crypto_random_string@1.1.0/deps.ts": "742c4c04df39a5fcc8939d3a2c9052229c2e2d61c2d7af5317fcbee5dd93c2ff",
     "https://deno.land/x/crypto_random_string@1.1.0/mod.ts": "f5513407c5efa5d4d25a61965ad5a3cd62d0f7d57246fe8db4b8d2ef2a630380",
+    "https://deno.land/x/deno_dayjs@v0.5.0/mod.ts": "9c0288fafa738dee685e9f3e436269f2da7dd65e6f928bbe53ad3a2db68d1ef6",
     "https://deno.land/x/deno_ffmpeg@v3.1.0/deps.ts": "a56c5886d76f6f27b5be8382fd8ece4d242660902d657472a6b873da6dd24ac2",
     "https://deno.land/x/deno_ffmpeg@v3.1.0/mod.ts": "1c26e05de887e70b7afe472e4178dd57332f7e2074648fdfa456500d3990dbb0",
     "https://deno.land/x/deno_ffmpeg@v3.1.0/src/error.ts": "3f63c79efaa34700b7c595d492893c8286d9c5e7bdf59b7d1e9d192325240acf",
@@ -1460,6 +1461,9 @@
     "https://deno.land/x/oak@v11.1.0/testing.ts": "7612656efd2975f7a2e6848609f5971922dbec46b76372c5c623202fdd7b9a85",
     "https://deno.land/x/oak@v11.1.0/types.d.ts": "41951a18c3bfdb11e40707cab75da078ba8a4907cd7d4e11d8536bc2db0dde05",
     "https://deno.land/x/oak@v11.1.0/util.ts": "3af8c4ed04c6cc2bedbe66e562a77fc59c72df31c55a902a63885861ca1639d6",
+    "https://deno.land/x/opus@0.1.1/mod.ts": "147af5927fbc824e069a96494751d5aab7d58b4fa10d3281bf67afd79dee63e0",
+    "https://deno.land/x/opus@0.1.1/opus.ts": "66258c4487b956ba1ecc98d60d9cd62aef93fdd8a5c98d6fe9105f9e39daecc6",
+    "https://deno.land/x/opus@0.1.1/pack/opuswasm.js": "3f7117456651a6e426fe5e22ecf02325278cac1bd0f6f42e62f0b97ed0a87601",
     "https://deno.land/x/path_to_regexp@v6.2.1/index.ts": "894060567837bae8fc9c5cbd4d0a05e9024672083d5883b525c031eea940e556",
     "https://deno.land/x/progress@v1.3.6/deps.ts": "83050e627263931d853ba28b7c15c80bf4be912bea7e0d3d13da2bc0aaf7889d",
     "https://deno.land/x/progress@v1.3.6/mod.ts": "74fddbb85fb6e6d781881e7456f480159baefb5c7e0c9a1677ae93026cb3a358",
@@ -1486,6 +1490,7 @@
     "https://deno.land/x/yt_download@1.7/src/parse/count.ts": "c3e47d1794fa21061b3982df7abc85fcb377ccfae85087244860c037bbece6f4",
     "https://deno.land/x/yt_download@1.7/src/parse/mod.ts": "c4cb7944494fac5a5cf80ff79a9b42c2147cce21e55b4815cef6a6c00298d509",
     "https://deno.land/x/yt_download@1.7/src/types.ts": "4473624473df5b85fa41d5a0e85914c76dc8b2a238baac9b2d28ed03aa7664ed",
+    "https://esm.sh/v96/dayjs@1.11.5/es2022/dayjs.mjs": "62c5c11c07adf3d55398171043b6691559df07a1c406064f9ea1c8877bbeb643",
     "https://unpkg.com/@evan/wasm@0.0.93/target/ed25519/deno.js": "9728126890f17b71cee41afdab8a4bc362f6b9f409fe0a5c4f6ca9f3b510fd3a",
     "https://unpkg.com/@evan/wasm@0.0.94/target/zlib/deno.js": "e65131e1c1f45e64960f2699a0b868927ea5c9201c4b986a7cfc57b18be5cc09",
     "https://unpkg.com/@evan/wasm@0.0.95/target/nacl/deno.js": "02fbcd8c7e24e5f25c901872724f2679d86db2d6b87638a6f1ea81a3a3630922",
@@ -1494,6 +1499,7 @@
   "npm": {
     "specifiers": {
       "dayjs@1.11.7": "dayjs@1.11.7",
+      "dayjs@1.11.9": "dayjs@1.11.9",
       "discord.js@14.7.1": "discord.js@14.7.1",
       "driftless": "driftless@2.0.3",
       "octokit@2.0.11": "octokit@2.0.11_@octokit+core@4.1.0",
@@ -1819,6 +1825,10 @@
       },
       "dayjs@1.11.7": {
         "integrity": "sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==",
+        "dependencies": {}
+      },
+      "dayjs@1.11.9": {
+        "integrity": "sha512-QvzAURSbQ0pKdIye2txOzNaHmxtUBXerpY0FJsFXUMKbIZeFm5ht1LS/jFsrncjnmtv8HsG0W2g6c0zUjZWmpA==",
         "dependencies": {}
       },
       "deprecation@2.3.1": {

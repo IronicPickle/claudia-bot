@@ -4,6 +4,7 @@ import productionConfig from "./production.config.ts";
 
 export interface Config {
   dataDir: string;
+  tmpDir: string;
   discord: {
     token?: string;
     botId?: bigint;

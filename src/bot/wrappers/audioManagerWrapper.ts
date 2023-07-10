@@ -1,5 +1,5 @@
 import { Bot } from "../../deps/discordeno.ts";
-import { AudioBot } from "../../lib/ts/audioBot.ts";
+import { AudioBot } from "../../lib/ts/audio.ts";
 import { EventManagerBot } from "../../lib/ts/eventManagerBot.ts";
 
 export default <B extends Bot & EventManagerBot>(bot: B) => {

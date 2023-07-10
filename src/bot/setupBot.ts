@@ -3,12 +3,12 @@ import { log } from "../lib/utils/generic.ts";
 import setupEvents from "./events/setupEvents.ts";
 import setupCommands from "./commands/setupCommands.ts";
 import { createBot, Intents, startBot } from "../deps/discordeno.ts";
-import sodium from "../deps/sodium.ts";
 import audioManagerWrapper from "./wrappers/audioManagerWrapper.ts";
 import eventManagerWrapper from "./wrappers/eventManagerWrapper.ts";
 import commandsManagerWrapper from "./wrappers/commandsManagerWrapper.ts";
 import configManagerWrapper from "./wrappers/configManagerWrapper.ts";
 import setupAudio from "./audio/setupAudio.ts";
+import sodium from "../deps/sodium.ts";
 
 await sodium.ready;
 
