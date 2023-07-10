@@ -72,14 +72,15 @@ export default () => {
   const processPlayers = (players: AudioPlayer[]) => {
     const player = players.shift();
 
-    if (!player)
+    if (!player) {
       return setTimeout(() => {
         dipsatchPackets();
       }, nextTime - Date.now());
+    }
 
     if (player.canPrepare()) player.preparePacket();
 
-    setTimeout(() => processPlayers(players), 0);
+    processPlayers(players);
   };
 
   dipsatchPackets();
