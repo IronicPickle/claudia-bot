@@ -25,3 +25,10 @@ export const audioSourceTypeNames = {
   [AudioSourceType.SoundCloud]: "SoundCloud",
   [AudioSourceType.Unknown]: "Unknown",
 };
+
+export const audioSourceTypeColors = {
+  [AudioSourceType.YouTube]: "0xFF0000",
+  [AudioSourceType.Spotify]: "0x1ED760",
+  [AudioSourceType.SoundCloud]: "0xFF7700",
+  [AudioSourceType.Unknown]: "0xFFFFFF",
+};

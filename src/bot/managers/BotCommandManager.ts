@@ -4,19 +4,22 @@ import {
   CreateApplicationCommand,
   CreateSlashApplicationCommand,
   Interaction,
+  InteractionResponse,
   InteractionResponseTypes,
   InteractionTypes,
 } from "../../deps/discordeno.ts";
 import { dataDir } from "../../lib/constants/generic.ts";
 import { EventManagerBot } from "../../lib/ts/eventManagerBot.ts";
-import { log } from "../../lib/utils/generic.ts";
+import { isString, log } from "../../lib/utils/generic.ts";
 
 const isEventManagerBot = (bot: any): bot is Bot & EventManagerBot =>
   !!bot.eventManager;
 
 interface Command {
   data: CreateApplicationCommand;
-  handler: (interaction: Interaction) => Promise<string | undefined>;
+  handler: (
+    interaction: Interaction
+  ) => Promise<string | InteractionResponse | undefined>;
 }
 
 export default class BotCommandManager {
@@ -97,19 +100,24 @@ export default class BotCommandManager {
       );
 
       if (interaction.type === InteractionTypes.ApplicationCommand && command) {
-        const msg = await command.handler(interaction);
-        if (msg) {
-          this.bot.helpers.sendInteractionResponse(
-            interaction.id,
-            interaction.token,
-            {
+        const dataOrMsg = await command.handler(interaction);
+
+        if (!dataOrMsg) return;
+
+        const interactionResponse: InteractionResponse = isString(dataOrMsg)
+          ? {
               type: InteractionResponseTypes.ChannelMessageWithSource,
               data: {
-                content: msg,
+                content: dataOrMsg,
               },
             }
-          );
-        }
+          : dataOrMsg;
+
+        this.bot.helpers.sendInteractionResponse(
+          interaction.id,
+          interaction.token,
+          interactionResponse
+        );
       }
     });
   }
@@ -117,7 +125,9 @@ export default class BotCommandManager {
   async saveCommand(
     name: string,
     command: Omit<CreateSlashApplicationCommand, "name">,
-    handler: (interaction: Interaction) => Promise<string | undefined>
+    handler: (
+      interaction: Interaction
+    ) => Promise<string | InteractionResponse | undefined>
   ) {
     log("[Bot Commands]", `Saving command '${name}'`);
 

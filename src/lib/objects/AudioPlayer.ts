@@ -2,7 +2,7 @@ import { cryptoRandomString, streamAsyncIterator } from "../../deps/deps.ts";
 import { Bot, VoiceOpcodes } from "../../deps/discordeno.ts";
 import sodium from "../../deps/sodium.ts";
 import { AudioBot, VoiceWsRes, AudioAsyncIterator } from "../ts/audio.ts";
-import { isUint8Arr, parseTime } from "../utils/generic.ts";
+import { createUserAt, isUint8Arr, parseTime } from "../utils/generic.ts";
 import AudioSource from "./AudioSource.ts";
 import { CHANNELS, FRAME_SIZE, SAMPLE_RATE } from "../constants/audio.ts";
 import opus from "../../deps/opus.ts";
@@ -104,8 +104,16 @@ export default class AudioPlayer {
     return this.queue[0];
   }
 
-  public async queueTrack(query: string, broadcastChannelId?: bigint) {
-    const audioSource = await AudioSource.from(query, broadcastChannelId);
+  public async queueTrack(
+    query: string,
+    broadcastChannelId?: bigint,
+    submitterMemberId?: bigint
+  ) {
+    const audioSource = AudioSource.from(
+      query,
+      broadcastChannelId,
+      submitterMemberId
+    );
 
     if (!audioSource) return null;
 
@@ -120,6 +128,11 @@ export default class AudioPlayer {
 
   public async skipTrack() {
     if (this.currentIterator?.return) await this.currentIterator.return();
+  }
+
+  public async seek(seconds: number) {
+    await this.skipTrack();
+    this.prepareTrack(seconds);
   }
 
   private async nextTrack() {
@@ -151,7 +164,13 @@ export default class AudioPlayer {
       date,
     } = currentTrack.sourceDetails;
 
-    const fields = [];
+    const fields = [
+      {
+        name: "Pulled from",
+        value: audioSourceTypeNames[type],
+      },
+    ];
+
     if (artist)
       fields.push({
         name: "Artist",
@@ -171,12 +190,19 @@ export default class AudioPlayer {
       ":"
     );
 
+    const submitterAt = currentTrack.submitterMemberId
+      ? createUserAt(currentTrack.submitterMemberId)
+      : "Unknown";
+
     this.bot.helpers.sendMessage(currentTrack.broadcastChannelId, {
-      content: "> **Now playing**",
       embeds: [
         {
+          author: {
+            name: "▶️ Now playing",
+          },
+          color: parseInt("0x3B88C3"),
           title,
-          description: `Pulled from ${audioSourceTypeNames[type]}`,
+          description: `Submitted by ${submitterAt}`,
           fields,
           // @ts-ignore: discordeno uses wrong type here, should be string
           timestamp: dayjs(date).format(),
@@ -201,15 +227,28 @@ export default class AudioPlayer {
       url,
       type = AudioSourceType.Unknown,
       title = "Unknown",
-    } = currentTrack?.sourceDetails;
+    } = currentTrack.sourceDetails;
+
+    const submitterAt = currentTrack.submitterMemberId
+      ? createUserAt(currentTrack.submitterMemberId)
+      : "Unknown";
 
     this.bot.helpers.sendMessage(currentTrack.broadcastChannelId, {
-      content: "> **Queued**",
       embeds: [
         {
+          author: {
+            name: "✅ Queued",
+          },
+          color: parseInt("0x77B255"),
           title,
-          description: `Pulled from ${audioSourceTypeNames[type]}`,
+          description: `Submitted by ${submitterAt}`,
           url,
+          fields: [
+            {
+              name: "Pulled from",
+              value: audioSourceTypeNames[type],
+            },
+          ],
         },
       ],
     });
@@ -230,7 +269,10 @@ export default class AudioPlayer {
     return !!this.nextPacket;
   }
 
-  private async prepareTrack() {
+  private async prepareTrack(startTime = 0) {
+    await this.ffmpegStream?.cancel();
+    await this.ffmpegProcess?.status;
+
     this.nextPacket = undefined;
     this.currentIterator = undefined;
     this.ffmpegProcess = undefined;
@@ -242,7 +284,11 @@ export default class AudioPlayer {
     AudioPlayer.log(null, "Waiting for download to finish");
     await currentTrack.downloadProcess.output();
 
-    this.broadcastUpNext();
+    if (this.currentIterator) return;
+
+    if (startTime === 0) this.broadcastUpNext();
+
+    const { hours, minutes, seconds } = parseTime(startTime);
 
     try {
       this.ffmpegProcess = new Deno.Command("ffmpeg", {
@@ -257,6 +303,9 @@ export default class AudioPlayer {
           CHANNELS.toString(),
           "-ar",
           SAMPLE_RATE.toString(),
+
+          "-ss",
+          `${hours}:${minutes}:${seconds}`,
 
           "pipe:1",
         ],

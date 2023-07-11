@@ -1,5 +1,12 @@
-import { ApplicationCommandOptionTypes } from "../../deps/discordeno.ts";
-import { parseCommandOptions } from "../../lib/utils/generic.ts";
+import {
+  ApplicationCommandOptionTypes,
+  InteractionResponseTypes,
+} from "../../deps/discordeno.ts";
+import {
+  audioSourceTypeColors,
+  audioSourceTypeNames,
+} from "../../lib/constants/generic.ts";
+import { createUserAt, parseCommandOptions } from "../../lib/utils/generic.ts";
 import { bot } from "../setupBot.ts";
 
 export default async () => {
@@ -36,12 +43,33 @@ export default async () => {
       if (!channelId) return "You must be in a voice channel to play a track.";
 
       await player.joinChannel(bot, channelId);
-      const audioSource = await player.queueTrack(query, interaction.channelId);
+      const audioSource = await player.queueTrack(
+        query,
+        interaction.channelId,
+        interaction.user.id
+      );
 
       if (!audioSource)
         return "The audio player was unable to process that track.";
 
-      return "I've sent your track to the audio player. Please wait...";
+      return {
+        type: InteractionResponseTypes.ChannelMessageWithSource,
+        data: {
+          embeds: [
+            {
+              author: {
+                name: "⏳ Downloading, please wait...",
+              },
+              color: parseInt(
+                audioSourceTypeColors[audioSource.sourceDetails.type]
+              ),
+              title: `Pulling from ${
+                audioSourceTypeNames[audioSource.sourceDetails.type]
+              }`,
+            },
+          ],
+        },
+      };
     }
   );
 };

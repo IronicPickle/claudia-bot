@@ -27,19 +27,22 @@ export default class AudioSource {
   public metadataExtractionPromise?: Promise<void>;
 
   public readonly broadcastChannelId?: bigint;
+  public readonly submitterMemberId?: bigint;
 
   private constructor(
     query: string,
     sourceFilePath: string,
     sourceDetails: AudioSourceDetails,
     downloadProcess: Deno.ChildProcess,
-    broadcastChannelId?: bigint
+    broadcastChannelId?: bigint,
+    submitterMemberId?: bigint
   ) {
     this.query = query;
     this.sourceDetails = sourceDetails;
     this.sourceFilePath = sourceFilePath;
     this.downloadProcess = downloadProcess;
     this.broadcastChannelId = broadcastChannelId;
+    this.submitterMemberId = submitterMemberId;
 
     this.extractMetadata();
   }
@@ -56,10 +59,14 @@ export default class AudioSource {
     }
   }
 
-  public static async from(query: string, broadcastChannelId?: bigint) {
+  public static from(
+    query: string,
+    broadcastChannelId?: bigint,
+    submitterMemberId?: bigint
+  ) {
     this.createTmpDir();
 
-    return await this.parseQuery(query, broadcastChannelId);
+    return this.parseQuery(query, broadcastChannelId, submitterMemberId);
   }
 
   private static createTmpDir() {
@@ -73,31 +80,38 @@ export default class AudioSource {
     }
   }
 
-  private static async parseQuery(query: string, broadcastChannelId?: bigint) {
+  private static parseQuery(
+    query: string,
+    broadcastChannelId?: bigint,
+    submitterMemberId?: bigint
+  ) {
     const ytId = AudioSource.getYtId(query);
     const spotId = AudioSource.getSpotId(query);
     const scId = AudioSource.getScId(query);
 
     if (ytId)
-      return await this.processId(
+      return this.processId(
         AudioSourceType.YouTube,
         query,
         ytId,
-        broadcastChannelId
+        broadcastChannelId,
+        submitterMemberId
       );
     if (spotId)
-      return await this.processId(
+      return this.processId(
         AudioSourceType.Spotify,
         query,
         spotId,
-        broadcastChannelId
+        broadcastChannelId,
+        submitterMemberId
       );
     if (scId)
-      return await this.processId(
+      return this.processId(
         AudioSourceType.SoundCloud,
         query,
         scId,
-        broadcastChannelId
+        broadcastChannelId,
+        submitterMemberId
       );
   }
 
@@ -132,15 +146,16 @@ export default class AudioSource {
     [AudioSourceType.Unknown]: () => {},
   };
 
-  private static async processId(
+  private static processId(
     type: AudioSourceType,
     query: string,
     id: string,
-    broadcastChannelId?: bigint
+    broadcastChannelId?: bigint,
+    submitterMemberId?: bigint
   ) {
     const sourceFunc = this.sourceFuncs[type];
 
-    const res = await sourceFunc(id);
+    const res = sourceFunc(id);
     if (!res) return;
 
     const { sourceFilePath, sourceDetails, downloadProcess } = res;
@@ -150,11 +165,12 @@ export default class AudioSource {
       sourceFilePath,
       sourceDetails,
       downloadProcess,
-      broadcastChannelId
+      broadcastChannelId,
+      submitterMemberId
     );
   }
 
-  private static async getYtSource(id: string) {
+  private static getYtSource(id: string) {
     const sourceFilePath = path.join(
       tmpAudioDirPath,
       `${crypto.randomUUID()}.webm`
@@ -181,7 +197,7 @@ export default class AudioSource {
     }
   }
 
-  private static async getSpotSource(id: string) {
+  private static getSpotSource(id: string) {
     const format = "mp3";
 
     const sourceFilePath = path.join(
@@ -210,7 +226,7 @@ export default class AudioSource {
     }
   }
 
-  private static async getScSource(id: string) {
+  private static getScSource(id: string) {
     const format = "mp3";
 
     const fileName = crypto.randomUUID();

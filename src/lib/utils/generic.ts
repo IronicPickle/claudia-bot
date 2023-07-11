@@ -89,3 +89,7 @@ export const parseTime = (timeElapsed: number, includeDays?: boolean) => {
     isNegative,
   };
 };
+
+export const createUserAt = (id: bigint) => `<@${id}>`;
+
+export const joinMultilines = (lines: string[]) => lines.join("\n");
