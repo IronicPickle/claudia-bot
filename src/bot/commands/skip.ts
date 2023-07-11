@@ -5,7 +5,6 @@ export default async () => {
     "skip",
     {
       description: "Skip the current track.",
-      defaultMemberPermissions: ["ADMINISTRATOR"],
     },
     async (interaction) => {
       const { guildId, user } = interaction;

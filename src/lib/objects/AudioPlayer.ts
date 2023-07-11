@@ -9,12 +9,7 @@ import opus from "../../deps/opus.ts";
 import { audioSourceTypeNames } from "../constants/generic.ts";
 import { AudioSourceType } from "../enums/audio.ts";
 import dayjs from "../../deps/dayjs.ts";
-
-const encoder = new opus.Encoder({
-  sample_rate: SAMPLE_RATE,
-  channels: CHANNELS,
-  application: "audio",
-});
+import { Dayjs } from "../../../../../../../AppData/Local/deno/npm/registry.npmjs.org/dayjs/1.11.7/index.d.ts";
 
 interface WsServerDetails {
   token: string;
@@ -40,6 +35,20 @@ interface UdpSessionDetails {
   mediaSessionId: string;
   audioCodec: string;
 }
+
+interface Filters {
+  pitch: number;
+}
+
+const opusEncoder = new opus.Encoder({
+  sample_rate: SAMPLE_RATE,
+  channels: CHANNELS,
+  application: "audio",
+});
+
+export const defaultFilters: Filters = {
+  pitch: 1,
+};
 
 const udpSocket = Deno.listenDatagram({
   hostname: "0.0.0.0",
@@ -74,6 +83,10 @@ export default class AudioPlayer {
   private sequence = 0;
   private timestamp = 0;
 
+  private currentTrackStartedAt?: Dayjs;
+
+  private filters: Filters = defaultFilters;
+
   private emptyFramesPrepared = 0;
   private nextPacket?: Uint8Array;
   private isSpeaking = false;
@@ -104,6 +117,20 @@ export default class AudioPlayer {
     return this.queue[0];
   }
 
+  public getCurrentTrackTime() {
+    if (!this.currentTrackStartedAt) return;
+    return dayjs().diff(this.currentTrackStartedAt, "seconds");
+  }
+
+  private async reencodeCurrentTrack(
+    seconds: number | undefined = this.getCurrentTrackTime()
+  ) {
+    if (seconds == null) return;
+
+    await this.skipTrack();
+    this.prepareTrack(seconds);
+  }
+
   public async queueTrack(
     query: string,
     broadcastChannelId?: bigint,
@@ -131,8 +158,55 @@ export default class AudioPlayer {
   }
 
   public async seek(seconds: number) {
-    await this.skipTrack();
-    this.prepareTrack(seconds);
+    this.reencodeCurrentTrack(seconds * (2 - this.filters.pitch));
+  }
+
+  public async setFilters(filters: Partial<Filters>) {
+    const time = this.getCurrentTrackTime();
+    if (time == null) return;
+
+    const oldAdjuster = this.filters.pitch - 1;
+    const oldOffset = time * oldAdjuster;
+
+    if (oldOffset >= 0) {
+      this.currentTrackStartedAt = this.currentTrackStartedAt?.subtract(
+        Math.abs(oldOffset),
+        "seconds"
+      );
+    } else {
+      this.currentTrackStartedAt = this.currentTrackStartedAt?.add(
+        Math.abs(oldOffset),
+        "seconds"
+      );
+    }
+
+    this.filters = { ...this.filters, ...filters };
+
+    const newAdjuster = 1 - this.filters.pitch;
+    const newOffset = time * newAdjuster;
+
+    if (newOffset >= 0) {
+      this.currentTrackStartedAt = this.currentTrackStartedAt?.subtract(
+        Math.abs(newOffset),
+        "seconds"
+      );
+    } else {
+      this.currentTrackStartedAt = this.currentTrackStartedAt?.add(
+        Math.abs(newOffset),
+        "seconds"
+      );
+    }
+
+    AudioPlayer.log(
+      null,
+      `\n\nAdjuster: ${newAdjuster}\n\nOffset: ${newOffset}\n\nStart time change: ${time} -> ${this.getCurrentTrackTime()}\n\n`
+    );
+
+    await this.reencodeCurrentTrack();
+  }
+
+  public async resetFilter() {
+    await this.setFilters(defaultFilters);
   }
 
   private async nextTrack() {
@@ -278,6 +352,8 @@ export default class AudioPlayer {
     this.ffmpegProcess = undefined;
     this.ffmpegStream = undefined;
 
+    this.currentTrackStartedAt = undefined;
+
     const currentTrack = this.getCurrentTrack();
     if (!currentTrack) return;
 
@@ -289,6 +365,8 @@ export default class AudioPlayer {
     if (startTime === 0) this.broadcastUpNext();
 
     const { hours, minutes, seconds } = parseTime(startTime);
+
+    this.currentTrackStartedAt = dayjs().subtract(startTime, "seconds");
 
     try {
       this.ffmpegProcess = new Deno.Command("ffmpeg", {
@@ -304,6 +382,9 @@ export default class AudioPlayer {
           "-ar",
           SAMPLE_RATE.toString(),
 
+          "-af",
+          `asetrate=${SAMPLE_RATE}*${this.filters.pitch}`,
+
           "-ss",
           `${hours}:${minutes}:${seconds}`,
 
@@ -316,7 +397,10 @@ export default class AudioPlayer {
 
       const pcmIterator = streamAsyncIterator(this.ffmpegStream);
 
-      const opusIterator = encoder.encode_pcm_stream(FRAME_SIZE, pcmIterator);
+      const opusIterator = opusEncoder.encode_pcm_stream(
+        FRAME_SIZE,
+        pcmIterator
+      );
 
       this.currentIterator = opusIterator;
     } catch (err: any) {
@@ -407,13 +491,13 @@ export default class AudioPlayer {
   public setWsServerDetails(wsServerDetails: WsServerDetails) {
     this.wsServerDetails = wsServerDetails;
 
-    this.tryInitSockets();
+    this.tryInitSocket();
   }
 
   public setWsSessionDetails(wsSessionDetails: WsSessionDetials) {
     this.wsSessionDetails = wsSessionDetails;
 
-    this.tryInitSockets();
+    this.tryInitSocket();
   }
 
   public closeSockets() {
@@ -426,16 +510,15 @@ export default class AudioPlayer {
     this.heartbeatInterval = undefined;
     this.stopHeartbeat();
 
+    this.webSocket?.close();
     this.webSocket = undefined;
   }
 
-  private tryInitSockets() {
+  private tryInitSocket() {
     if (!this.wsServerDetails || !this.wsSessionDetails || this.webSocket)
-      return false;
+      return;
 
     this.initWebSocket();
-
-    return true;
   }
 
   private initWebSocket() {

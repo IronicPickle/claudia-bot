@@ -7,7 +7,6 @@ export default async () => {
     "seek",
     {
       description: "Seek to a specific part of a song.",
-      defaultMemberPermissions: ["ADMINISTRATOR"],
       options: [
         {
           type: ApplicationCommandOptionTypes.Number,

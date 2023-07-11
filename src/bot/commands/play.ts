@@ -6,7 +6,7 @@ import {
   audioSourceTypeColors,
   audioSourceTypeNames,
 } from "../../lib/constants/generic.ts";
-import { createUserAt, parseCommandOptions } from "../../lib/utils/generic.ts";
+import { parseCommandOptions } from "../../lib/utils/generic.ts";
 import { bot } from "../setupBot.ts";
 
 export default async () => {
@@ -14,7 +14,6 @@ export default async () => {
     "play",
     {
       description: "Queue a track.",
-      defaultMemberPermissions: [],
       options: [
         {
           type: ApplicationCommandOptionTypes.String,
