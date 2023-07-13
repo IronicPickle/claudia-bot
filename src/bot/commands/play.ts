@@ -18,7 +18,8 @@ export default async () => {
         {
           type: ApplicationCommandOptionTypes.String,
           name: "query",
-          description: "Can be either a YouTube, Spotify or Soundcloud URL.",
+          description:
+            "Can be a track name or, a YouTube, Spotify or Soundcloud URL.",
           required: true,
         },
       ],

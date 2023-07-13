@@ -97,7 +97,7 @@ export default class AudioSource {
         broadcastChannelId,
         submitterMemberId
       );
-    if (spotId)
+    else if (spotId)
       return this.processId(
         AudioSourceType.Spotify,
         query,
@@ -105,11 +105,19 @@ export default class AudioSource {
         broadcastChannelId,
         submitterMemberId
       );
-    if (scId)
+    else if (scId)
       return this.processId(
         AudioSourceType.SoundCloud,
         query,
         scId,
+        broadcastChannelId,
+        submitterMemberId
+      );
+    else
+      return this.processId(
+        AudioSourceType.Unknown,
+        query,
+        null,
         broadcastChannelId,
         submitterMemberId
       );
@@ -143,19 +151,19 @@ export default class AudioSource {
     [AudioSourceType.YouTube]: AudioSource.getYtSource,
     [AudioSourceType.Spotify]: AudioSource.getSpotSource,
     [AudioSourceType.SoundCloud]: AudioSource.getScSource,
-    [AudioSourceType.Unknown]: () => {},
+    [AudioSourceType.Unknown]: AudioSource.getYtSearchSource,
   };
 
   private static processId(
     type: AudioSourceType,
     query: string,
-    id: string,
+    id: string | null,
     broadcastChannelId?: bigint,
     submitterMemberId?: bigint
   ) {
     const sourceFunc = this.sourceFuncs[type];
 
-    const res = sourceFunc(id);
+    const res = sourceFunc(id ?? query);
     if (!res) return;
 
     const { sourceFilePath, sourceDetails, downloadProcess } = res;
@@ -262,6 +270,36 @@ export default class AudioSource {
     }
   }
 
+  private static getYtSearchSource(query: string) {
+    const sourceFilePath = path.join(
+      tmpAudioDirPath,
+      `${crypto.randomUUID()}.webm`
+    );
+
+    try {
+      const downloadProcess = new Deno.Command("yt-dlp", {
+        args: [
+          `ytsearch:${query}`,
+          "-f",
+          "bestaudio",
+          "-o",
+          sourceFilePath,
+          "--embed-metadata",
+        ],
+      }).spawn();
+
+      return {
+        sourceFilePath,
+        sourceDetails: {
+          type: AudioSourceType.YouTube,
+        },
+        downloadProcess,
+      };
+    } catch (err: any) {
+      console.error("Unable to download using yt-dlp", err);
+    }
+  }
+
   private async extractMetadata() {
     const fetchMetadata = async () => {
       await this.downloadProcess.output();
@@ -304,6 +342,10 @@ export default class AudioSource {
         ? parseFloat(metadata.format?.duration)
         : undefined;
       this.sourceDetails.date = metadata.format?.tags?.DATE;
+      this.sourceDetails.url = metadata.format?.tags?.PURL;
+      this.sourceDetails.id = AudioSource.getYtId(
+        metadata.format?.tags?.PURL ?? ""
+      );
     } else if (isSpotifyMetaData(metadata, this.sourceDetails.type)) {
       this.sourceDetails.title = metadata.format?.tags?.title;
       this.sourceDetails.artist = metadata.format?.tags?.artist;

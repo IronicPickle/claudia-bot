@@ -1,5 +1,9 @@
 import { cryptoRandomString, streamAsyncIterator } from "../../deps/deps.ts";
-import { Bot, VoiceOpcodes } from "../../deps/discordeno.ts";
+import {
+  Bot,
+  VoiceCloseEventCodes,
+  VoiceOpcodes,
+} from "../../deps/discordeno.ts";
 import sodium from "../../deps/sodium.ts";
 import { AudioBot, VoiceWsRes, AudioAsyncIterator } from "../ts/audio.ts";
 import { createUserAt, isUint8Arr, parseTime } from "../utils/generic.ts";
@@ -38,6 +42,7 @@ interface UdpSessionDetails {
 
 interface Filters {
   pitch: number;
+  volume: number;
 }
 
 const opusEncoder = new opus.Encoder({
@@ -48,6 +53,7 @@ const opusEncoder = new opus.Encoder({
 
 export const defaultFilters: Filters = {
   pitch: 1,
+  volume: 50,
 };
 
 const udpSocket = Deno.listenDatagram({
@@ -196,11 +202,6 @@ export default class AudioPlayer {
         "seconds"
       );
     }
-
-    AudioPlayer.log(
-      null,
-      `\n\nAdjuster: ${newAdjuster}\n\nOffset: ${newOffset}\n\nStart time change: ${time} -> ${this.getCurrentTrackTime()}\n\n`
-    );
 
     await this.reencodeCurrentTrack();
   }
@@ -383,7 +384,9 @@ export default class AudioPlayer {
           SAMPLE_RATE.toString(),
 
           "-af",
-          `asetrate=${SAMPLE_RATE}*${this.filters.pitch}`,
+          `asetrate=${SAMPLE_RATE}*${this.filters.pitch},volume=${
+            this.filters.volume / 50
+          }`,
 
           "-ss",
           `${hours}:${minutes}:${seconds}`,
@@ -521,6 +524,11 @@ export default class AudioPlayer {
     this.initWebSocket();
   }
 
+  private tryReconnect() {
+    this.closeSockets();
+    this.tryInitSocket();
+  }
+
   private initWebSocket() {
     if (!this.wsServerDetails)
       return console.error("Missing WS server detials");
@@ -539,6 +547,10 @@ export default class AudioPlayer {
       this.ws.idenfity();
     });
 
+    this.webSocket.addEventListener("close", (event) => {
+      this.handleWebSocketClose(event.code);
+    });
+
     this.webSocket.addEventListener("message", async (message) => {
       this.handleWebSocketRes(JSON.parse(message.data));
     });
@@ -549,6 +561,11 @@ export default class AudioPlayer {
 
     switch (op) {
       case VoiceOpcodes.Ready: {
+        AudioPlayer.log(
+          "WS",
+          "Identification successful, performing UDP discovery..."
+        );
+
         const { ssrc, ip, port } = d;
 
         this.udpServerDetails = {
@@ -561,7 +578,14 @@ export default class AudioPlayer {
 
         break;
       }
+      case VoiceOpcodes.Resumed: {
+        AudioPlayer.log("WS", "Connection resumed.");
+
+        break;
+      }
       case VoiceOpcodes.Hello: {
+        AudioPlayer.log("WS", "Received hello, starting hearbeat.");
+
         const { heartbeat_interval } = d;
 
         this.heartbeatInterval = heartbeat_interval;
@@ -571,6 +595,8 @@ export default class AudioPlayer {
         break;
       }
       case VoiceOpcodes.SessionDescription: {
+        AudioPlayer.log("WS", "UDP discovery successful.");
+
         const { video_codec, secret_key, mode, media_session_id, audio_codec } =
           d;
 
@@ -581,6 +607,58 @@ export default class AudioPlayer {
           mediaSessionId: media_session_id,
           audioCodec: audio_codec,
         };
+
+        break;
+      }
+      case VoiceOpcodes.HeartbeatACK: {
+        AudioPlayer.log("WS", "Heartbeat successful.", { nonce: d });
+      }
+    }
+  }
+
+  private handleWebSocketClose(code: number) {
+    AudioPlayer.log("WS", "Socket closed with code: ", code);
+
+    switch (code) {
+      case VoiceCloseEventCodes.SessionNoLongerValid: {
+        AudioPlayer.log(
+          "WS",
+          "Session no longer valid, starting new session..."
+        );
+
+        this.tryReconnect();
+
+        break;
+      }
+      case VoiceCloseEventCodes.SessionTimedOut: {
+        AudioPlayer.log("WS", "Session timed out, starting new session...");
+
+        this.tryReconnect();
+
+        break;
+      }
+      case VoiceCloseEventCodes.Disconnect: {
+        AudioPlayer.log("WS", "Disconnected, not reconnecting.");
+
+        // do not reconnect
+
+        break;
+      }
+      case VoiceCloseEventCodes.VoiceServerCrashed: {
+        // try to resume
+
+        AudioPlayer.log("WS", "Voice server crashed, trying to resume...");
+
+        this.ws.resume();
+
+        break;
+      }
+      default: {
+        // try to resume
+
+        AudioPlayer.log("WS", "Unknown error code, trying to resume...");
+
+        this.ws.resume();
 
         break;
       }
@@ -643,6 +721,24 @@ export default class AudioPlayer {
     clearInterval(this.heartbeatIntervalId);
   }
 
+  private wsSend(payload: Record<any, any>) {
+    if (!this.webSocket)
+      return console.error("Cannot send, missing web socket");
+
+    if (
+      [WebSocket.CLOSED, WebSocket.CLOSING, WebSocket.CONNECTING].includes(
+        this.webSocket.readyState
+      )
+    ) {
+      return AudioPlayer.log(
+        "WS",
+        "Cannot send payload, socket state is either closed, closing or connecting."
+      );
+    }
+
+    this.webSocket.send(JSON.stringify(payload));
+  }
+
   private ws = {
     idenfity: () => {
       if (!this.webSocket) return console.error("Missing web socket");
@@ -657,36 +753,57 @@ export default class AudioPlayer {
       const { sessionId, userId } = this.wsSessionDetails;
       const { token } = this.wsServerDetails;
 
-      this.webSocket.send(
-        JSON.stringify({
-          op: VoiceOpcodes.Identify,
-          d: {
+      this.wsSend({
+        op: VoiceOpcodes.Identify,
+        d: {
+          server_id: this.guildId.toString(),
+          user_id: userId.toString(),
+          session_id: sessionId,
+          token: token,
+        },
+      });
+    },
+    resume: () => {
+      if (!this.webSocket) return console.error("Missing web socket");
+
+      if (!this.wsServerDetails)
+        return console.error("Missing WS server detials");
+      if (!this.wsSessionDetails)
+        return console.error("Missing ws session details");
+
+      AudioPlayer.log("WS", "Resuming connection");
+
+      const { sessionId } = this.wsSessionDetails;
+      const { token } = this.wsServerDetails;
+
+      this.wsSend({
+        op: VoiceOpcodes.Resume,
+        d: {
+          protocol: "udp",
+          data: {
             server_id: this.guildId.toString(),
-            user_id: userId.toString(),
             session_id: sessionId,
             token: token,
           },
-        })
-      );
+        },
+      });
     },
     selectProtocol: (address: string, port: number) => {
       if (!this.webSocket) return console.error("Missing web socket");
 
       AudioPlayer.log("WS", "Selecting protocol");
 
-      this.webSocket.send(
-        JSON.stringify({
-          op: VoiceOpcodes.SelectProtocol,
-          d: {
-            protocol: "udp",
-            data: {
-              address,
-              port,
-              mode: "xsalsa20_poly1305",
-            },
+      this.wsSend({
+        op: VoiceOpcodes.SelectProtocol,
+        d: {
+          protocol: "udp",
+          data: {
+            address,
+            port,
+            mode: "xsalsa20_poly1305",
           },
-        })
-      );
+        },
+      });
     },
     speaking: (isSpeaking: boolean) => {
       if (!this.webSocket) return console.error("Missing web socket");
@@ -699,34 +816,29 @@ export default class AudioPlayer {
 
       AudioPlayer.log("WS", "Setting speaking state to", isSpeaking);
 
-      this.webSocket.send(
-        JSON.stringify({
-          op: VoiceOpcodes.Speaking,
-          d: {
-            speaking,
-            delay: 0,
-            ssrc: this.udpServerDetails.ssrc,
-          },
-        })
-      );
+      this.wsSend({
+        op: VoiceOpcodes.Speaking,
+        d: {
+          speaking,
+          delay: 0,
+          ssrc: this.udpServerDetails.ssrc,
+        },
+      });
     },
-
     heartbeat: () => {
       if (!this.webSocket) return console.error("Missing web socket");
 
       AudioPlayer.log("WS", "Sending heartbeat");
 
-      this.webSocket.send(
-        JSON.stringify({
-          op: VoiceOpcodes.Heartbeat,
-          d: parseInt(
-            cryptoRandomString({
-              length: 13,
-              type: "numeric",
-            })
-          ),
-        })
-      );
+      this.wsSend({
+        op: VoiceOpcodes.Heartbeat,
+        d: parseInt(
+          cryptoRandomString({
+            length: 13,
+            type: "numeric",
+          })
+        ),
+      });
     },
   };
 }

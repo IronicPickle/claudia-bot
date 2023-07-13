@@ -9,7 +9,7 @@ export default async () => {
       description: "Seek to a specific part of a song.",
       options: [
         {
-          type: ApplicationCommandOptionTypes.Number,
+          type: ApplicationCommandOptionTypes.Integer,
           name: "seconds",
           description: "Seconds",
           required: true,
@@ -17,14 +17,14 @@ export default async () => {
           minValue: 0,
         },
         {
-          type: ApplicationCommandOptionTypes.Number,
+          type: ApplicationCommandOptionTypes.Integer,
           name: "minutes",
           description: "Minutes",
           maxValue: 59,
           minValue: 0,
         },
         {
-          type: ApplicationCommandOptionTypes.Number,
+          type: ApplicationCommandOptionTypes.Integer,
           name: "hours",
           description: "Hours",
           maxValue: 59,

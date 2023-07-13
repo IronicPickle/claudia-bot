@@ -26,20 +26,28 @@ export interface VoiceWsEventData {
     };
   };
   [VoiceOpcodes.Speaking]: {};
-  [VoiceOpcodes.HeartbeatACK]: {};
+  [VoiceOpcodes.HeartbeatACK]: {
+    op: VoiceOpcodes.HeartbeatACK;
+    d: number;
+  };
   [VoiceOpcodes.Resume]: {};
   [VoiceOpcodes.Hello]: {
     op: VoiceOpcodes.Hello;
     d: { heartbeat_interval: number };
   };
-  [VoiceOpcodes.Resumed]: {};
+  [VoiceOpcodes.Resumed]: {
+    op: VoiceOpcodes.Resumed;
+    d: null;
+  };
   [VoiceOpcodes.ClientDisconnect]: {};
 }
 
 export type VoiceWsRes =
   | VoiceWsEventData[VoiceOpcodes.Ready]
+  | VoiceWsEventData[VoiceOpcodes.Resumed]
   | VoiceWsEventData[VoiceOpcodes.SessionDescription]
-  | VoiceWsEventData[VoiceOpcodes.Hello];
+  | VoiceWsEventData[VoiceOpcodes.Hello]
+  | VoiceWsEventData[VoiceOpcodes.HeartbeatACK];
 
 export interface AudioBot extends Bot {
   audio: {
@@ -52,8 +60,8 @@ export type AudioAsyncIterator =
   | AsyncIterableIterator<Uint8Array>;
 
 export interface AudioSourceDetailsShared {
-  id: string;
-  url: string;
+  id?: string;
+  url?: string;
   title?: string;
   artist?: string;
   album?: string;

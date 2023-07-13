@@ -3,8 +3,9 @@ import getTime from "./getTime.ts";
 import listGuildConfig from "./listGuildConfig.ts";
 import play from "./play.ts";
 import seek from "./seek.ts";
-import setSampleRate from "./setSampleRate.ts";
+import setPitch from "./setPitch.ts";
 import skip from "./skip.ts";
+import volume from "./volume.ts";
 
 export default async () => {
   await listGuildConfig();
@@ -12,7 +13,8 @@ export default async () => {
   await skip();
   await seek();
   await getTime();
-  await setSampleRate();
+  await setPitch();
+  await volume();
 
   bot.commandManager.registerListener();
 };

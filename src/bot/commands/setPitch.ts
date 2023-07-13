@@ -17,7 +17,6 @@ export default async () => {
           type: ApplicationCommandOptionTypes.String,
           name: "pitch",
           description: "Pitch - Leave empty to reset",
-          required: true,
           choices: [
             {
               name: "Weeb",
@@ -43,7 +42,7 @@ export default async () => {
         pitch: AudioSourcePitch;
       }>(options);
 
-      const pitchChoice = (pitchOption.value ??
+      const pitchChoice = (pitchOption?.value ??
         AudioSourcePitch.Normal) as AudioSourcePitch;
       const pitchValue = audioSourcePitchValues[pitchChoice];
       const pitchName = audioSourcePitchNames[pitchChoice];
@@ -57,10 +56,6 @@ export default async () => {
 
       if (!channelId)
         return "You must be in a voice channel to set the filters for a track.";
-
-      const currentTrack = player.getCurrentTrack();
-
-      if (!currentTrack) return "There is no track playing at the moment.";
 
       player.setFilters({
         pitch: pitchValue,
