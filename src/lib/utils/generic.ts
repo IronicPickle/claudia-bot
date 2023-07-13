@@ -3,6 +3,7 @@ import { isDev } from "../../config/config.ts";
 import { WebhookPingEvent } from "../ts/webhookPingEvent.ts";
 import { WebhookPushEvent } from "../ts/webhookPushEvent.ts";
 import { CommandOption, CommandOptions, CommandValue } from "../ts/generic.ts";
+import { streamAsyncIterator } from "../../deps/deps.ts";
 
 export const log = (...text: any[]) => isDev && console.log("[Dev]", ...text);
 
@@ -93,3 +94,6 @@ export const parseTime = (timeElapsed: number, includeDays?: boolean) => {
 export const createUserAt = (id: bigint) => `<@${id}>`;
 
 export const joinMultilines = (lines: string[]) => lines.join("\n");
+
+export const randomNum = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1) + min);

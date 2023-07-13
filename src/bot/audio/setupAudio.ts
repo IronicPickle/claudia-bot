@@ -57,7 +57,7 @@ export default () => {
 
   let nextTime = Date.now();
 
-  const dipsatchPackets = () => {
+  const dispatchPackets = () => {
     nextTime += FRAME_LENGTH;
 
     const players = Object.values(bot.audio.players);
@@ -74,7 +74,7 @@ export default () => {
 
     if (!player) {
       return setTimeout(() => {
-        dipsatchPackets();
+        dispatchPackets();
       }, nextTime - Date.now());
     }
 
@@ -83,5 +83,5 @@ export default () => {
     processPlayers(players);
   };
 
-  dipsatchPackets();
+  dispatchPackets();
 };

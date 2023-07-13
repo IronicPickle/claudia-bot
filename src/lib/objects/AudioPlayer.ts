@@ -5,62 +5,33 @@ import {
   VoiceOpcodes,
 } from "../../deps/discordeno.ts";
 import sodium from "../../deps/sodium.ts";
-import { AudioBot, VoiceWsRes, AudioAsyncIterator } from "../ts/audio.ts";
-import { createUserAt, isUint8Arr, parseTime } from "../utils/generic.ts";
+import {
+  AudioBot,
+  VoiceWsRes,
+  AudioAsyncIterator,
+  AudioPlayerWsServerDetails,
+  AudioPlayerWsSessionDetials,
+  AudioPlayerFilters,
+  AudioPlayerUdpServerDetails,
+  AudioPlayerUdpSessionDetails,
+} from "../ts/audio.ts";
+import {
+  createUserAt,
+  isUint8Arr,
+  parseTime,
+  randomNum,
+} from "../utils/generic.ts";
 import AudioSource from "./AudioSource.ts";
 import { CHANNELS, FRAME_SIZE, SAMPLE_RATE } from "../constants/audio.ts";
 import opus from "../../deps/opus.ts";
 import { audioSourceTypeNames } from "../constants/generic.ts";
 import { AudioSourceType } from "../enums/audio.ts";
 import dayjs from "../../deps/dayjs.ts";
-import { Dayjs } from "../../../../../../../AppData/Local/deno/npm/registry.npmjs.org/dayjs/1.11.7/index.d.ts";
 
-interface WsServerDetails {
-  token: string;
-  endpoint: string;
-}
-
-interface WsSessionDetials {
-  channelId: bigint;
-  sessionId: string;
-  userId: bigint;
-}
-
-interface UdpServerDetails {
-  ip: string;
-  port: number;
-  ssrc: number;
-}
-
-interface UdpSessionDetails {
-  videoCodec: string;
-  secretKey: Uint8Array;
-  mode: string;
-  mediaSessionId: string;
-  audioCodec: string;
-}
-
-interface Filters {
-  pitch: number;
-  volume: number;
-}
-
-const opusEncoder = new opus.Encoder({
-  sample_rate: SAMPLE_RATE,
-  channels: CHANNELS,
-  application: "audio",
-});
-
-export const defaultFilters: Filters = {
+export const defaultFilters: AudioPlayerFilters = {
   pitch: 1,
   volume: 50,
 };
-
-const udpSocket = Deno.listenDatagram({
-  hostname: "0.0.0.0",
-  port: 5000,
-  transport: "udp",
-});
 
 export default class AudioPlayer {
   private bot: Bot & AudioBot;
@@ -70,17 +41,24 @@ export default class AudioPlayer {
   private guildId: bigint;
 
   private webSocket?: WebSocket;
+  private udpSocket?: Deno.DatagramConn;
 
-  private wsServerDetails?: WsServerDetails;
-  private wsSessionDetails?: WsSessionDetials;
+  private wsServerDetails?: AudioPlayerWsServerDetails;
+  private wsSessionDetails?: AudioPlayerWsSessionDetials;
 
-  private udpServerDetails?: UdpServerDetails;
-  private udpSessionDetails?: UdpSessionDetails;
+  private udpServerDetails?: AudioPlayerUdpServerDetails;
+  private udpSessionDetails?: AudioPlayerUdpSessionDetails;
 
   private heartbeatInterval?: number;
   private heartbeatIntervalId?: number;
 
   private queue: AudioSource[] = [];
+
+  private opusEncoder = new opus.Encoder({
+    sample_rate: SAMPLE_RATE,
+    channels: CHANNELS,
+    application: "audio",
+  });
 
   private ffmpegProcess?: Deno.ChildProcess;
   private ffmpegStream?: ReadableStream<Uint8Array>;
@@ -89,9 +67,9 @@ export default class AudioPlayer {
   private sequence = 0;
   private timestamp = 0;
 
-  private currentTrackStartedAt?: Dayjs;
+  private currentTrackStartedAt?: dayjs.Dayjs;
 
-  private filters: Filters = defaultFilters;
+  private filters: AudioPlayerFilters = defaultFilters;
 
   private emptyFramesPrepared = 0;
   private nextPacket?: Uint8Array;
@@ -167,7 +145,7 @@ export default class AudioPlayer {
     this.reencodeCurrentTrack(seconds * (2 - this.filters.pitch));
   }
 
-  public async setFilters(filters: Partial<Filters>) {
+  public async setFilters(filters: Partial<AudioPlayerFilters>) {
     const time = this.getCurrentTrackTime();
     if (time == null) return;
 
@@ -400,7 +378,7 @@ export default class AudioPlayer {
 
       const pcmIterator = streamAsyncIterator(this.ffmpegStream);
 
-      const opusIterator = opusEncoder.encode_pcm_stream(
+      const opusIterator = this.opusEncoder.encode_pcm_stream(
         FRAME_SIZE,
         pcmIterator
       );
@@ -472,13 +450,14 @@ export default class AudioPlayer {
   }
 
   public async dispatchPacket() {
+    if (!this.udpSocket) return console.error("Missing udp socket");
     if (!this.udpServerDetails)
       return console.error("Missing udp server details");
     if (!this.udpSessionDetails)
       return console.error("Missing udp session details");
     if (!this.nextPacket) return console.error("Missing next packet");
 
-    udpSocket.send(this.nextPacket, {
+    this.udpSocket.send(this.nextPacket, {
       hostname: this.udpServerDetails.ip,
       port: this.udpServerDetails.port,
       transport: "udp",
@@ -491,30 +470,41 @@ export default class AudioPlayer {
     return bot.helpers.connectToVoiceChannel(this.guildId, channelId);
   }
 
-  public setWsServerDetails(wsServerDetails: WsServerDetails) {
+  public setWsServerDetails(wsServerDetails: AudioPlayerWsServerDetails) {
     this.wsServerDetails = wsServerDetails;
 
     this.tryInitSocket();
   }
 
-  public setWsSessionDetails(wsSessionDetails: WsSessionDetials) {
+  public setWsSessionDetails(wsSessionDetails: AudioPlayerWsSessionDetials) {
     this.wsSessionDetails = wsSessionDetails;
 
     this.tryInitSocket();
   }
 
+  public disconnect() {
+    this.closeSockets();
+
+    this.nextPacket = undefined;
+
+    if (this.currentIterator?.return) this.currentIterator?.return();
+  }
+
   public closeSockets() {
-    this.wsSessionDetails = undefined;
-    this.udpSessionDetails = undefined;
-
-    this.wsServerDetails = undefined;
-    this.udpServerDetails = undefined;
-
-    this.heartbeatInterval = undefined;
-    this.stopHeartbeat();
-
     this.webSocket?.close();
     this.webSocket = undefined;
+    this.udpSocket?.close();
+    this.udpSocket = undefined;
+
+    this.wsServerDetails = undefined;
+    this.wsSessionDetails = undefined;
+
+    this.udpServerDetails = undefined;
+    this.udpSessionDetails = undefined;
+
+    this.heartbeatInterval = undefined;
+
+    this.stopHeartbeat();
   }
 
   private tryInitSocket() {
@@ -522,6 +512,7 @@ export default class AudioPlayer {
       return;
 
     this.initWebSocket();
+    this.initUdpSocket();
   }
 
   private tryReconnect() {
@@ -553,6 +544,16 @@ export default class AudioPlayer {
 
     this.webSocket.addEventListener("message", async (message) => {
       this.handleWebSocketRes(JSON.parse(message.data));
+    });
+  }
+
+  private initUdpSocket() {
+    const port = randomNum(1000, 5000);
+
+    this.udpSocket = Deno.listenDatagram({
+      hostname: "0.0.0.0",
+      port,
+      transport: "udp",
     });
   }
 
@@ -642,6 +643,8 @@ export default class AudioPlayer {
 
         // do not reconnect
 
+        this.disconnect();
+
         break;
       }
       case VoiceCloseEventCodes.VoiceServerCrashed: {
@@ -666,10 +669,10 @@ export default class AudioPlayer {
   }
 
   private async performUdpDiscovery() {
+    if (!this.udpSocket) return console.error("Missing UDP socket");
     if (!this.udpServerDetails)
       return console.error("Missing UDP server detials");
     if (!this.webSocket) return console.error("Missing web socket");
-
     const { ssrc, ip, port } = this.udpServerDetails;
 
     const buffer = new ArrayBuffer(74);
@@ -681,13 +684,13 @@ export default class AudioPlayer {
 
     AudioPlayer.log("UDP", "Performing UDP discovery", { ip, port });
 
-    udpSocket.send(new Uint8Array(buffer), {
+    this.udpSocket.send(new Uint8Array(buffer), {
       transport: "udp",
       port: port,
       hostname: ip,
     });
 
-    for (const message of await udpSocket.receive()) {
+    for (const message of await this.udpSocket.receive()) {
       if (!isUint8Arr(message)) continue;
 
       const localAddress = new TextDecoder().decode(

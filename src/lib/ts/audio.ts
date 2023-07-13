@@ -2,6 +2,36 @@ import { Bot, VoiceOpcodes } from "../../deps/discordeno.ts";
 import { AudioSourceType } from "../enums/audio.ts";
 import AudioPlayer from "../objects/AudioPlayer.ts";
 
+export interface AudioPlayerWsServerDetails {
+  token: string;
+  endpoint: string;
+}
+
+export interface AudioPlayerWsSessionDetials {
+  channelId: bigint;
+  sessionId: string;
+  userId: bigint;
+}
+
+export interface AudioPlayerUdpServerDetails {
+  ip: string;
+  port: number;
+  ssrc: number;
+}
+
+export interface AudioPlayerUdpSessionDetails {
+  videoCodec: string;
+  secretKey: Uint8Array;
+  mode: string;
+  mediaSessionId: string;
+  audioCodec: string;
+}
+
+export interface AudioPlayerFilters {
+  pitch: number;
+  volume: number;
+}
+
 export interface VoiceWsEventData {
   [VoiceOpcodes.Identify]: {};
   [VoiceOpcodes.SelectProtocol]: {};
