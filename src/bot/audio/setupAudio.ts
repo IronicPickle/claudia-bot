@@ -26,7 +26,7 @@ export default () => {
       if (bot.id !== userId) return;
 
       if (!channelId) {
-        player.closeSockets();
+        player.resetSession();
         return;
       }
 
@@ -44,7 +44,7 @@ export default () => {
       const player = bot.audio.players[guildId.toString()];
 
       if (!endpoint) {
-        player.closeSockets();
+        player.resetSession();
         return;
       }
 

@@ -64,6 +64,8 @@ export default class AudioPlayer {
   private ffmpegStream?: ReadableStream<Uint8Array>;
   private currentIterator?: AudioAsyncIterator;
 
+  private isPaused = false;
+
   private sequence = 0;
   private timestamp = 0;
 
@@ -135,6 +137,16 @@ export default class AudioPlayer {
     this.broadcastAddedToQueue(audioSource);
 
     return audioSource;
+  }
+
+  public pauseTrack() {
+    this.isPaused = true;
+    this.ws.speaking(false);
+  }
+
+  public resumeTrack() {
+    this.isPaused = false;
+    this.ws.speaking(true);
   }
 
   public async skipTrack() {
@@ -309,6 +321,7 @@ export default class AudioPlayer {
 
   public canPrepare() {
     return (
+      !this.isPaused &&
       !!this.webSocket &&
       !!this.udpServerDetails &&
       !!this.udpSessionDetails &&
@@ -319,7 +332,7 @@ export default class AudioPlayer {
   }
 
   public canDispatch() {
-    return !!this.nextPacket;
+    return !this.isPaused && !!this.nextPacket;
   }
 
   private async prepareTrack(startTime = 0) {
@@ -457,16 +470,20 @@ export default class AudioPlayer {
       return console.error("Missing udp session details");
     if (!this.nextPacket) return console.error("Missing next packet");
 
-    this.udpSocket.send(this.nextPacket, {
-      hostname: this.udpServerDetails.ip,
-      port: this.udpServerDetails.port,
-      transport: "udp",
-    });
+    try {
+      this.udpSocket.send(this.nextPacket, {
+        hostname: this.udpServerDetails.ip,
+        port: this.udpServerDetails.port,
+        transport: "udp",
+      });
+    } catch (err: any) {
+      console.error("Unable to send over udp socket.", err);
+    }
   }
 
   public joinChannel(bot: Bot, channelId: bigint) {
     if (this.getVoiceUserChannel(bot.id) === channelId) return;
-    this.closeSockets();
+    this.resetSession();
     return bot.helpers.connectToVoiceChannel(this.guildId, channelId);
   }
 
@@ -482,22 +499,13 @@ export default class AudioPlayer {
     this.tryInitSocket();
   }
 
-  public disconnect() {
-    this.closeSockets();
+  public closeSession() {
+    this.pauseTrack();
 
-    this.nextPacket = undefined;
-
-    if (this.currentIterator?.return) this.currentIterator?.return();
-  }
-
-  public closeSockets() {
     this.webSocket?.close();
     this.webSocket = undefined;
     this.udpSocket?.close();
     this.udpSocket = undefined;
-
-    this.wsServerDetails = undefined;
-    this.wsSessionDetails = undefined;
 
     this.udpServerDetails = undefined;
     this.udpSessionDetails = undefined;
@@ -505,6 +513,15 @@ export default class AudioPlayer {
     this.heartbeatInterval = undefined;
 
     this.stopHeartbeat();
+  }
+
+  public async resetSession() {
+    this.closeSession();
+
+    this.wsServerDetails = undefined;
+    this.wsSessionDetails = undefined;
+
+    await this.bot.helpers.leaveVoiceChannel(this.guildId);
   }
 
   private tryInitSocket() {
@@ -516,7 +533,7 @@ export default class AudioPlayer {
   }
 
   private tryReconnect() {
-    this.closeSockets();
+    this.closeSession();
     this.tryInitSocket();
   }
 
@@ -559,6 +576,8 @@ export default class AudioPlayer {
 
   private handleWebSocketRes({ op, d }: VoiceWsRes) {
     AudioPlayer.log("WS", `Received op code: ${op}`);
+
+    this.resumeTrack();
 
     switch (op) {
       case VoiceOpcodes.Ready: {
@@ -620,6 +639,8 @@ export default class AudioPlayer {
   private handleWebSocketClose(code: number) {
     AudioPlayer.log("WS", "Socket closed with code: ", code);
 
+    this.pauseTrack();
+
     switch (code) {
       case VoiceCloseEventCodes.SessionNoLongerValid: {
         AudioPlayer.log(
@@ -643,7 +664,7 @@ export default class AudioPlayer {
 
         // do not reconnect
 
-        this.disconnect();
+        this.resetSession();
 
         break;
       }
@@ -659,9 +680,9 @@ export default class AudioPlayer {
       default: {
         // try to resume
 
-        AudioPlayer.log("WS", "Unknown error code, trying to resume...");
+        AudioPlayer.log("WS", "Unknown error code, trying to reconnect...");
 
-        this.ws.resume();
+        this.tryReconnect();
 
         break;
       }
@@ -684,11 +705,15 @@ export default class AudioPlayer {
 
     AudioPlayer.log("UDP", "Performing UDP discovery", { ip, port });
 
-    this.udpSocket.send(new Uint8Array(buffer), {
-      transport: "udp",
-      port: port,
-      hostname: ip,
-    });
+    try {
+      this.udpSocket.send(new Uint8Array(buffer), {
+        transport: "udp",
+        port: port,
+        hostname: ip,
+      });
+    } catch (err: any) {
+      console.error("Unable to send over udp socket.", err);
+    }
 
     for (const message of await this.udpSocket.receive()) {
       if (!isUint8Arr(message)) continue;
@@ -739,7 +764,11 @@ export default class AudioPlayer {
       );
     }
 
-    this.webSocket.send(JSON.stringify(payload));
+    try {
+      this.webSocket.send(JSON.stringify(payload));
+    } catch (err: any) {
+      console.error("Unable to send over websocket.", err);
+    }
   }
 
   private ws = {
@@ -812,6 +841,8 @@ export default class AudioPlayer {
       if (!this.webSocket) return console.error("Missing web socket");
       if (!this.udpServerDetails)
         return console.error("Missing UDP server details");
+
+      if (isSpeaking === this.isSpeaking) return;
 
       const speaking = isSpeaking ? 1 : 0;
 
