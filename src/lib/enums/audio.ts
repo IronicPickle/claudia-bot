@@ -5,8 +5,12 @@ export enum AudioSourceType {
   SoundCloud = "SOUNDCLOUD",
 }
 
-export enum AudioSourcePitch {
-  Weeb = "WEEB",
-  Normal = "NORMAL",
-  DeathGargle = "DEATH_GARGLE",
+export enum AudioSourceFilterStep {
+  High3 = 30,
+  High2 = 20,
+  High1 = 10,
+  Normal = 0,
+  Low1 = -10,
+  Low2 = -20,
+  Low3 = -30,
 }

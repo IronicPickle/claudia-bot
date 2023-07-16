@@ -30,6 +30,8 @@ export interface AudioPlayerUdpSessionDetails {
 export interface AudioPlayerFilters {
   pitch: number;
   volume: number;
+  bass: number;
+  treble: number;
 }
 
 export interface VoiceWsEventData {

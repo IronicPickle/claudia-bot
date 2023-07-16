@@ -3,7 +3,7 @@ import {
   audioSourcePitchNames,
   audioSourcePitchValues,
 } from "../../lib/constants/audio.ts";
-import { AudioSourcePitch } from "../../lib/enums/audio.ts";
+import { AudioSourceFilterStep } from "../../lib/enums/audio.ts";
 import { parseCommandOptions } from "../../lib/utils/generic.ts";
 import { bot } from "../setupBot.ts";
 
@@ -14,36 +14,51 @@ export default async () => {
       description: "Set the pitch.",
       options: [
         {
-          type: ApplicationCommandOptionTypes.String,
+          type: ApplicationCommandOptionTypes.Integer,
           name: "pitch",
           description: "Pitch - Leave empty to reset",
           choices: [
             {
-              name: "Weeb",
-              value: AudioSourcePitch.Weeb,
+              name: audioSourcePitchNames[AudioSourceFilterStep.High3],
+              value: AudioSourceFilterStep.High3,
             },
             {
-              name: "Normal",
-              value: AudioSourcePitch.Normal,
+              name: audioSourcePitchNames[AudioSourceFilterStep.High2],
+              value: AudioSourceFilterStep.High2,
             },
-
             {
-              name: "Death Gargle",
-              value: AudioSourcePitch.DeathGargle,
+              name: audioSourcePitchNames[AudioSourceFilterStep.High1],
+              value: AudioSourceFilterStep.High1,
+            },
+            {
+              name: audioSourcePitchNames[AudioSourceFilterStep.Normal],
+              value: AudioSourceFilterStep.Normal,
+            },
+            {
+              name: audioSourcePitchNames[AudioSourceFilterStep.Low1],
+              value: AudioSourceFilterStep.Low1,
+            },
+            {
+              name: audioSourcePitchNames[AudioSourceFilterStep.Low2],
+              value: AudioSourceFilterStep.Low2,
+            },
+            {
+              name: audioSourcePitchNames[AudioSourceFilterStep.Low3],
+              value: AudioSourceFilterStep.Low3,
             },
           ],
         },
       ],
     },
     async (interaction) => {
-      const { guildId, user, data: { options } = {} } = interaction;
+      const { guildId, data: { options } = {} } = interaction;
 
       const { pitch: pitchOption } = parseCommandOptions<{
-        pitch: AudioSourcePitch;
+        pitch: AudioSourceFilterStep;
       }>(options);
 
       const pitchChoice = (pitchOption?.value ??
-        AudioSourcePitch.Normal) as AudioSourcePitch;
+        AudioSourceFilterStep.Normal) as AudioSourceFilterStep;
       const pitchValue = audioSourcePitchValues[pitchChoice];
       const pitchName = audioSourcePitchNames[pitchChoice];
 
@@ -52,16 +67,12 @@ export default async () => {
       if (!interaction.member) return "This command must be used it a server.";
 
       const player = bot.audio.players[guildId.toString()];
-      const channelId = player.getVoiceUserChannel(user.id);
-
-      if (!channelId)
-        return "You must be in a voice channel to set the filters for a track.";
 
       player.setFilters({
         pitch: pitchValue,
       });
 
-      return `I've told the audio player to use the new pitch to ${pitchName}`;
+      return `I've told the audio player to use the pitch to ${pitchName}`;
     }
   );
 };

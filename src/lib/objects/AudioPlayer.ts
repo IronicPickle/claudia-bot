@@ -31,6 +31,8 @@ import dayjs from "../../deps/dayjs.ts";
 export const defaultFilters: AudioPlayerFilters = {
   pitch: 1,
   volume: 50,
+  bass: 0,
+  treble: 0,
 };
 
 export default class AudioPlayer {
@@ -133,10 +135,17 @@ export default class AudioPlayer {
     this.queue.push(audioSource);
     AudioPlayer.log(null, "Queueing");
     if (!this.currentIterator) this.prepareTrack();
+    if (this.isPaused) this.resumeTrack();
 
     this.broadcastAddedToQueue(audioSource);
 
     return audioSource;
+  }
+
+  public async stopTrack() {
+    this.queue = [];
+    await this.skipTrack();
+    await this.clearCurrentTrack();
   }
 
   public pauseTrack() {
@@ -147,6 +156,14 @@ export default class AudioPlayer {
   public resumeTrack() {
     this.isPaused = false;
     this.ws.speaking(true);
+  }
+
+  public getIsPaused() {
+    return this.isPaused;
+  }
+
+  public getQueue() {
+    return this.queue;
   }
 
   public async skipTrack() {
@@ -335,7 +352,7 @@ export default class AudioPlayer {
     return !this.isPaused && !!this.nextPacket;
   }
 
-  private async prepareTrack(startTime = 0) {
+  private async clearCurrentTrack() {
     await this.ffmpegStream?.cancel();
     await this.ffmpegProcess?.status;
 
@@ -345,6 +362,10 @@ export default class AudioPlayer {
     this.ffmpegStream = undefined;
 
     this.currentTrackStartedAt = undefined;
+  }
+
+  private async prepareTrack(startTime = 0) {
+    await this.clearCurrentTrack();
 
     const currentTrack = this.getCurrentTrack();
     if (!currentTrack) return;
@@ -359,6 +380,9 @@ export default class AudioPlayer {
     const { hours, minutes, seconds } = parseTime(startTime);
 
     this.currentTrackStartedAt = dayjs().subtract(startTime, "seconds");
+
+    const bass = 10;
+    const treble = 0;
 
     try {
       this.ffmpegProcess = new Deno.Command("ffmpeg", {
@@ -377,7 +401,11 @@ export default class AudioPlayer {
           "-af",
           `asetrate=${SAMPLE_RATE}*${this.filters.pitch},volume=${
             this.filters.volume / 50
-          }`,
+          },firequalizer=gain_entry='entry(0,${this.filters.bass});entry(250,${
+            this.filters.bass / 2
+          });entry(1000,0);entry(4000,${this.filters.treble / 2});entry(16000,${
+            this.filters.treble
+          })'`,
 
           "-ss",
           `${hours}:${minutes}:${seconds}`,
@@ -577,8 +605,6 @@ export default class AudioPlayer {
   private handleWebSocketRes({ op, d }: VoiceWsRes) {
     AudioPlayer.log("WS", `Received op code: ${op}`);
 
-    this.resumeTrack();
-
     switch (op) {
       case VoiceOpcodes.Ready: {
         AudioPlayer.log(
@@ -601,6 +627,8 @@ export default class AudioPlayer {
       case VoiceOpcodes.Resumed: {
         AudioPlayer.log("WS", "Connection resumed.");
 
+        this.resumeTrack();
+
         break;
       }
       case VoiceOpcodes.Hello: {
@@ -611,6 +639,8 @@ export default class AudioPlayer {
         this.heartbeatInterval = heartbeat_interval;
 
         this.startHeartbeat();
+
+        this.resumeTrack();
 
         break;
       }
@@ -627,6 +657,8 @@ export default class AudioPlayer {
           mediaSessionId: media_session_id,
           audioCodec: audio_codec,
         };
+
+        this.resumeTrack();
 
         break;
       }

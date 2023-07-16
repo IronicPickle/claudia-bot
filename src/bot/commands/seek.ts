@@ -33,7 +33,7 @@ export default async () => {
       ],
     },
     async (interaction) => {
-      const { guildId, user, data: { options } = {} } = interaction;
+      const { guildId, data: { options } = {} } = interaction;
 
       const {
         hours: hoursOption,
@@ -54,9 +54,6 @@ export default async () => {
       if (!interaction.member) return "This command must be used it a server.";
 
       const player = bot.audio.players[guildId.toString()];
-      const channelId = player.getVoiceUserChannel(user.id);
-
-      if (!channelId) return "You must be in a voice channel to seek a track.";
 
       const currentTrack = player.getCurrentTrack();
 

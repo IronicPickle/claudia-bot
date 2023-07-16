@@ -2,9 +2,9 @@ import { bot } from "../setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(
-    "skip",
+    "stop",
     {
-      description: "Skip the current track.",
+      description: "Stop the audio player and clear the queue.",
     },
     async (interaction) => {
       const { guildId } = interaction;
@@ -18,9 +18,9 @@ export default async () => {
       if (!player.getCurrentTrack())
         return "There is no track playing at the moment.";
 
-      player.skipTrack();
+      await player.stopTrack();
 
-      return "I've told the audio player to skip this track.";
+      return "I've told the audio player to stop playing and clear the queue.";
     }
   );
 };

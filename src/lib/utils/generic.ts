@@ -3,7 +3,6 @@ import { isDev } from "../../config/config.ts";
 import { WebhookPingEvent } from "../ts/webhookPingEvent.ts";
 import { WebhookPushEvent } from "../ts/webhookPushEvent.ts";
 import { CommandOption, CommandOptions, CommandValue } from "../ts/generic.ts";
-import { streamAsyncIterator } from "../../deps/deps.ts";
 
 export const log = (...text: any[]) => isDev && console.log("[Dev]", ...text);
 
@@ -27,6 +26,7 @@ export const toCamelCase = (text: string) => {
 
   return cameled;
 };
+
 export const getNestedValue = (object: Record<any, any>, key: string): any => {
   return key.split(".").reduce((acc, k) => (acc && acc[k]) ?? null, object);
 };

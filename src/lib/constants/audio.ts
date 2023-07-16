@@ -1,4 +1,4 @@
-import { AudioSourcePitch } from "../enums/audio.ts";
+import { AudioSourceFilterStep } from "../enums/audio.ts";
 
 export const SAMPLE_RATE = 48000;
 export const FRAME_LENGTH = 20;
@@ -7,13 +7,61 @@ export const CHANNELS = 2;
 export const FRAME_SIZE = SAMPLE_RATE / FPS; // Samples per frame
 
 export const audioSourcePitchValues = {
-  [AudioSourcePitch.Weeb]: 1.25,
-  [AudioSourcePitch.Normal]: 1,
-  [AudioSourcePitch.DeathGargle]: 0.75,
+  [AudioSourceFilterStep.High3]: 1.45,
+  [AudioSourceFilterStep.High2]: 1.3,
+  [AudioSourceFilterStep.High1]: 1.15,
+  [AudioSourceFilterStep.Normal]: 1,
+  [AudioSourceFilterStep.Low1]: 0.85,
+  [AudioSourceFilterStep.Low2]: 0.7,
+  [AudioSourceFilterStep.Low3]: 0.55,
 };
 
 export const audioSourcePitchNames = {
-  [AudioSourcePitch.Weeb]: "Weeb",
-  [AudioSourcePitch.Normal]: "Normal",
-  [AudioSourcePitch.DeathGargle]: "Death Gargle",
+  [AudioSourceFilterStep.High3]: "Weeb Overdrive™",
+  [AudioSourceFilterStep.High2]: "Weeb",
+  [AudioSourceFilterStep.High1]: "Weeb Lite™",
+  [AudioSourceFilterStep.Normal]: "Normal",
+  [AudioSourceFilterStep.Low1]: "A Bit Sad",
+  [AudioSourceFilterStep.Low2]: "Big Sad",
+  [AudioSourceFilterStep.Low3]: "Death Gargle",
+};
+
+export const audioSourceBassValues = {
+  [AudioSourceFilterStep.High3]: 15,
+  [AudioSourceFilterStep.High2]: 10,
+  [AudioSourceFilterStep.High1]: 5,
+  [AudioSourceFilterStep.Normal]: 0,
+  [AudioSourceFilterStep.Low1]: 0,
+  [AudioSourceFilterStep.Low2]: 0,
+  [AudioSourceFilterStep.Low3]: 0,
+};
+
+export const audioSourceBassNames = {
+  [AudioSourceFilterStep.High3]: "WET",
+  [AudioSourceFilterStep.High2]: "Blast Me",
+  [AudioSourceFilterStep.High1]: "Heavy",
+  [AudioSourceFilterStep.Normal]: "Normal",
+  [AudioSourceFilterStep.Low1]: "Unnamed",
+  [AudioSourceFilterStep.Low2]: "Unnamed",
+  [AudioSourceFilterStep.Low3]: "Unnamed",
+};
+
+export const audioSourceTrebleValues = {
+  [AudioSourceFilterStep.High3]: 15,
+  [AudioSourceFilterStep.High2]: 10,
+  [AudioSourceFilterStep.High1]: 5,
+  [AudioSourceFilterStep.Normal]: 0,
+  [AudioSourceFilterStep.Low1]: 0,
+  [AudioSourceFilterStep.Low2]: 0,
+  [AudioSourceFilterStep.Low3]: 0,
+};
+
+export const audioSourceTrebleNames = {
+  [AudioSourceFilterStep.High3]: "Just no!",
+  [AudioSourceFilterStep.High2]: "Wind up Radio",
+  [AudioSourceFilterStep.High1]: "Tinny",
+  [AudioSourceFilterStep.Normal]: "Normal",
+  [AudioSourceFilterStep.Low1]: "Unnamed",
+  [AudioSourceFilterStep.Low2]: "Unnamed",
+  [AudioSourceFilterStep.Low3]: "Unnamed",
 };
