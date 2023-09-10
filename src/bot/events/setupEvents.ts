@@ -1,7 +1,11 @@
-import guildCreate from "./guildCreate.ts";
-import guildDelete from "./guildDelete.ts";
+import guildCreateEvent from "./guildCreateEvent.ts";
+import guildDeleteEvent from "./guildDeleteEvent.ts";
+import guildUpdateEvent from "./guildUpdateEvent.ts";
+import guildMemberAddEvent from "./guildMemberAddEvent.ts";
 
 export default () => {
-  guildCreate();
-  guildDelete();
+  guildCreateEvent();
+  guildDeleteEvent();
+  guildUpdateEvent();
+  guildMemberAddEvent();
 };

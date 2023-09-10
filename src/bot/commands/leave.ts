@@ -2,9 +2,9 @@ import { bot } from "../setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(
-    "pause",
+    "leave",
     {
-      description: "Pause the current track.",
+      description: "Disconnect the bot from the channel.",
     },
     async (interaction) => {
       const { guildId } = interaction;
@@ -15,14 +15,12 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
-      if (!player.getCurrentTrack())
-        return "There is no track playing at the moment.";
+      if (!player.getBotVoiceChannelId())
+        return "I'm not currently in a channel.";
 
-      if (player.getIsPaused()) return "The current track is already paused.";
+      await player.leaveChannel();
 
-      player.pauseTrack();
-
-      return "I've told the audio player to pause the current track.";
+      return "I'll leave...";
     }
   );
 };

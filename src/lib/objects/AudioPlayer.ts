@@ -1,4 +1,4 @@
-import { cryptoRandomString, streamAsyncIterator } from "../../deps/deps.ts";
+import { cryptoRandomString } from "../../deps/deps.ts";
 import {
   Bot,
   VoiceCloseEventCodes,
@@ -15,18 +15,19 @@ import {
   AudioPlayerUdpServerDetails,
   AudioPlayerUdpSessionDetails,
 } from "../ts/audio.ts";
-import {
-  createUserAt,
-  isUint8Arr,
-  parseTime,
-  randomNum,
-} from "../utils/generic.ts";
+import { createUserAt, isUint8Arr, log, parseTime } from "../utils/generic.ts";
 import AudioSource from "./AudioSource.ts";
 import { CHANNELS, FRAME_SIZE, SAMPLE_RATE } from "../constants/audio.ts";
 import opus from "../../deps/opus.ts";
 import { audioSourceTypeNames } from "../constants/generic.ts";
 import { AudioSourceType } from "../enums/audio.ts";
 import dayjs from "../../deps/dayjs.ts";
+import EventManager from "./EventManager.ts";
+import {
+  iterateReader,
+  readerFromStreamReader,
+} from "https://deno.land/std@0.152.0/streams/conversion.ts";
+import { randomNum } from "../../../../claudia-shared/lib/utils/generic.ts";
 
 export const defaultFilters: AudioPlayerFilters = {
   pitch: 1,
@@ -35,7 +36,13 @@ export const defaultFilters: AudioPlayerFilters = {
   treble: 0,
 };
 
-export default class AudioPlayer {
+export default class AudioPlayer extends EventManager<
+  "userJoin" | "userLeave",
+  {
+    userJoin: () => void;
+    userLeave: () => void;
+  }
+> {
   private bot: Bot & AudioBot;
 
   private voiceUserChannels: Record<string, bigint> = {};
@@ -63,7 +70,7 @@ export default class AudioPlayer {
   });
 
   private ffmpegProcess?: Deno.ChildProcess;
-  private ffmpegStream?: ReadableStream<Uint8Array>;
+  private ffmpegStream?: ReadableStreamDefaultReader<Uint8Array>;
   private currentIterator?: AudioAsyncIterator;
 
   private isPaused = false;
@@ -80,17 +87,36 @@ export default class AudioPlayer {
   private isSpeaking = false;
 
   constructor(bot: Bot & AudioBot, guildId: bigint) {
+    super();
+
     this.bot = bot;
     this.guildId = guildId;
   }
 
   public static log(type: "WS" | "UDP" | null, ...args: any[]) {
-    console.log("[Audio Player]", type ? `${type} ->` : "", ...args);
+    log("[Audio Player]", type ? `${type} ->` : "", ...args);
   }
 
   public updateVoiceUserChannel(userId: bigint, channelId?: bigint) {
-    if (!channelId) delete this.voiceUserChannels[userId.toString()];
-    else this.voiceUserChannels[userId.toString()] = channelId;
+    if (!channelId) {
+      delete this.voiceUserChannels[userId.toString()];
+    } else {
+      const currChannelId = this.voiceUserChannels[userId.toString()];
+
+      if (currChannelId === channelId) return;
+
+      if (channelId === this.getBotVoiceChannelId()) {
+        for (const { handler } of Object.values(this.events.userJoin ?? {})) {
+          handler();
+        }
+      } else {
+        for (const { handler } of Object.values(this.events.userLeave ?? {})) {
+          handler();
+        }
+      }
+
+      this.voiceUserChannels[userId.toString()] = channelId;
+    }
   }
 
   public getVoiceUserChannels() {
@@ -99,6 +125,10 @@ export default class AudioPlayer {
 
   public getVoiceUserChannel(userId: bigint) {
     return this.voiceUserChannels[userId.toString()] as bigint | undefined;
+  }
+
+  public getBotVoiceChannelId() {
+    return this.getVoiceUserChannel(this.bot.id);
   }
 
   public getCurrentTrack(): AudioSource | undefined {
@@ -117,6 +147,17 @@ export default class AudioPlayer {
 
     await this.skipTrack();
     this.prepareTrack(seconds);
+  }
+
+  public playFile(filePath: string) {
+    const audioSource = AudioSource.fromPath(filePath);
+
+    if (!audioSource) return null;
+
+    this.queue.unshift(audioSource);
+    AudioPlayer.log(null, "Playing");
+    if (!this.currentIterator) this.prepareTrack();
+    if (this.isPaused) this.resumeTrack();
   }
 
   public async queueTrack(
@@ -155,7 +196,8 @@ export default class AudioPlayer {
 
   public resumeTrack() {
     this.isPaused = false;
-    this.ws.speaking(true);
+
+    if (this.getCurrentTrack()) this.ws.speaking(true);
   }
 
   public getIsPaused() {
@@ -221,8 +263,12 @@ export default class AudioPlayer {
     this.ws.speaking(false);
     this.emptyFramesPrepared = 0;
 
-    await this.ffmpegStream?.cancel();
-    await this.ffmpegProcess?.status;
+    try {
+      await this.ffmpegStream?.cancel();
+      await this.ffmpegProcess?.status;
+    } catch (err) {
+      console.error(err);
+    }
 
     this.queue[0].destroy();
 
@@ -353,8 +399,12 @@ export default class AudioPlayer {
   }
 
   private async clearCurrentTrack() {
-    await this.ffmpegStream?.cancel();
-    await this.ffmpegProcess?.status;
+    try {
+      await this.ffmpegStream?.cancel();
+      await this.ffmpegProcess?.status;
+    } catch (err) {
+      console.error(err);
+    }
 
     this.nextPacket = undefined;
     this.currentIterator = undefined;
@@ -371,7 +421,7 @@ export default class AudioPlayer {
     if (!currentTrack) return;
 
     AudioPlayer.log(null, "Waiting for download to finish");
-    await currentTrack.downloadProcess.output();
+    await currentTrack.downloadProcess?.output();
 
     if (this.currentIterator) return;
 
@@ -380,9 +430,6 @@ export default class AudioPlayer {
     const { hours, minutes, seconds } = parseTime(startTime);
 
     this.currentTrackStartedAt = dayjs().subtract(startTime, "seconds");
-
-    const bass = 10;
-    const treble = 0;
 
     try {
       this.ffmpegProcess = new Deno.Command("ffmpeg", {
@@ -415,9 +462,11 @@ export default class AudioPlayer {
         stdout: "piped",
       }).spawn();
 
-      this.ffmpegStream = this.ffmpegProcess.stdout;
+      const reader = this.ffmpegProcess.stdout.getReader();
 
-      const pcmIterator = streamAsyncIterator(this.ffmpegStream);
+      this.ffmpegStream = reader;
+
+      const pcmIterator = iterateReader(readerFromStreamReader(reader));
 
       const opusIterator = this.opusEncoder.encode_pcm_stream(
         FRAME_SIZE,
@@ -509,10 +558,14 @@ export default class AudioPlayer {
     }
   }
 
-  public joinChannel(bot: Bot, channelId: bigint) {
+  public async joinChannel(bot: Bot, channelId: bigint) {
     if (this.getVoiceUserChannel(bot.id) === channelId) return;
     this.resetSession();
-    return bot.helpers.connectToVoiceChannel(this.guildId, channelId);
+    return await bot.helpers.connectToVoiceChannel(this.guildId, channelId);
+  }
+
+  public async leaveChannel() {
+    await this.bot.helpers.leaveVoiceChannel(this.guildId);
   }
 
   public setWsServerDetails(wsServerDetails: AudioPlayerWsServerDetails) {

@@ -1,10 +1,21 @@
+import { path } from "../../deps/deps.ts";
 import { FRAME_LENGTH } from "../../lib/constants/audio.ts";
+import { benDir } from "../../lib/constants/generic.ts";
 import AudioPlayer from "../../lib/objects/AudioPlayer.ts";
 import { bot } from "../setupBot.ts";
 
 export default () => {
   bot.eventManager.on("guildCreate", (_, { id, voiceStates }) => {
     const player = new AudioPlayer(bot, id);
+
+    // player.addEventListener("userJoin", () => {
+    //   player.playFile(path.join(benDir, "user_joined.ogg"));
+    // });
+
+    // player.addEventListener("userLeave", () => {
+    //   player.playFile(path.join(benDir, "user_left.ogg"));
+    // });
+
     bot.audio.players[id.toString()] = player;
 
     for (const [userId, voiceState] of voiceStates) {

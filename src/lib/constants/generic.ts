@@ -7,6 +7,7 @@ export const srcDir = path.join(
   "../../"
 );
 export const dataDir = path.join(srcDir, config.dataDir);
+export const benDir = path.join(srcDir, "ben");
 export const tmpDirPath = path.join(dataDir, "tmp");
 
 // Id lands in index [3]
@@ -23,6 +24,7 @@ export const audioSourceTypeNames = {
   [AudioSourceType.YouTube]: "YouTube",
   [AudioSourceType.Spotify]: "Spotify",
   [AudioSourceType.SoundCloud]: "SoundCloud",
+  [AudioSourceType.File]: "File",
   [AudioSourceType.Unknown]: "Unknown",
 };
 
@@ -30,5 +32,6 @@ export const audioSourceTypeColors = {
   [AudioSourceType.YouTube]: "0xFF0000",
   [AudioSourceType.Spotify]: "0x1ED760",
   [AudioSourceType.SoundCloud]: "0xFF7700",
+  [AudioSourceType.File]: "0xFFFFFF",
   [AudioSourceType.Unknown]: "0xFFFFFF",
 };

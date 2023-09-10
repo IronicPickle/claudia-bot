@@ -2,7 +2,9 @@ import { path } from "../../deps/deps.ts";
 import { dataDir } from "../../lib/constants/generic.ts";
 import { log } from "../../lib/utils/generic.ts";
 
-export interface GuildConfig {}
+export interface GuildConfig {
+  active: boolean;
+}
 
 export interface BotConfig {
   guilds: Record<string, GuildConfig>;
@@ -12,7 +14,9 @@ const defaultBotConfig: BotConfig = {
   guilds: {},
 };
 
-const defaultGuildConfig: GuildConfig = {};
+const defaultGuildConfig: GuildConfig = {
+  active: true,
+};
 
 export default class BotConfigManager {
   private configPath = path.join(dataDir, "config.json");

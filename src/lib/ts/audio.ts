@@ -113,6 +113,10 @@ export interface AudioSourceDetailsSoundCloud {
   type: AudioSourceType.SoundCloud;
 }
 
+export interface AudioSourceDetailsFile {
+  type: AudioSourceType.File;
+}
+
 export interface AudioSourceDetailsUnknown {
   type: AudioSourceType.Unknown;
 }
@@ -121,6 +125,7 @@ export type AudioSourceDetails = (
   | AudioSourceDetailsYouTube
   | AudioSourceDetailsSpotify
   | AudioSourceDetailsSoundCloud
+  | AudioSourceDetailsFile
   | AudioSourceDetailsUnknown
 ) &
   AudioSourceDetailsShared;

@@ -11,7 +11,7 @@ export default async () => {
 
       if (!guildId) return "Invalid input";
 
-      if (!interaction.member) return "This command must be used it a server.";
+      if (!interaction.member) return "This command must be used in a server.";
 
       const player = bot.audio.players[guildId.toString()];
 

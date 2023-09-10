@@ -1,4 +1,5 @@
-import { parseBody, router } from "../setupOak.ts";
+import { parseBody } from "../../../../claudia-shared/lib/utils/api.ts";
+import { router } from "../setupOak.ts";
 
 export default () => {
   router.post("/github/push/:guildId", async (ctx) => {

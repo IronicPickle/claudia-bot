@@ -1,3 +1,4 @@
+import { isString } from "../../../../claudia-shared/lib/utils/generic.ts";
 import { path } from "../../deps/deps.ts";
 import {
   Bot,
@@ -10,7 +11,7 @@ import {
 } from "../../deps/discordeno.ts";
 import { dataDir } from "../../lib/constants/generic.ts";
 import { EventManagerBot } from "../../lib/ts/eventManagerBot.ts";
-import { isString, log } from "../../lib/utils/generic.ts";
+import { log } from "../../lib/utils/generic.ts";
 
 const isEventManagerBot = (bot: any): bot is Bot & EventManagerBot =>
   !!bot.eventManager;

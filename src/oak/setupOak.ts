@@ -1,5 +1,5 @@
 import config from "../config/config.ts";
-import { Application, Router, RouterContext } from "../deps/oak.ts";
+import { Application, Router } from "../deps/oak.ts";
 import { log } from "../lib/utils/generic.ts";
 
 import test from "./test/test.ts";
@@ -18,26 +18,4 @@ export default () => {
   });
 
   app.listen(config.oak.listenOptions);
-};
-
-export const parseBody = async <B>(ctx: RouterContext<any, any, any>) => {
-  let body: B | null;
-  try {
-    body = await ctx.request.body({
-      type: "json",
-    }).value;
-  } catch (_err) {
-    return null;
-  }
-  return body;
-};
-
-export const handleError = (
-  ctx: RouterContext<any, any, any>,
-  status: number,
-  err: string
-) => {
-  ctx.response.status = status;
-  ctx.response.body = { err };
-  log("[Oak]", `HTTP ERROR | ${status} - ${err}`);
 };

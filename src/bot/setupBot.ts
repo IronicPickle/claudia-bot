@@ -9,29 +9,35 @@ import commandsManagerWrapper from "./wrappers/commandsManagerWrapper.ts";
 import configManagerWrapper from "./wrappers/configManagerWrapper.ts";
 import setupAudio from "./audio/setupAudio.ts";
 import sodium from "../deps/sodium.ts";
+import cacheWrapper from "./wrappers/cacheWrapper.ts";
+import startupSetup from "./startupSetup.ts";
 
 await sodium.ready;
 
 if (!config.discord.token) throw Error("A discord token is required");
 if (!config.discord.botId) throw Error("A bot ID is required");
 
-export const bot = configManagerWrapper(
-  commandsManagerWrapper(
-    audioManagerWrapper(
-      eventManagerWrapper(
-        createBot({
-          token: config.discord.token,
-          botId: config.discord.botId,
-          intents:
-            Intents.Guilds |
-            Intents.GuildMessages |
-            Intents.GuildVoiceStates |
-            Intents.GuildMembers,
-        })
+export const bot = cacheWrapper(
+  configManagerWrapper(
+    commandsManagerWrapper(
+      audioManagerWrapper(
+        eventManagerWrapper(
+          createBot({
+            token: config.discord.token,
+            botId: config.discord.botId,
+            intents:
+              Intents.Guilds |
+              Intents.GuildMessages |
+              Intents.GuildVoiceStates |
+              Intents.GuildMembers,
+          })
+        )
       )
     )
   )
 );
+
+bot.activeGuildIds;
 
 export default async () => {
   bot.eventManager.addEventListener("ready", (_bot, { user }) => {
@@ -40,6 +46,8 @@ export default async () => {
     setupEvents();
     setupCommands();
     setupAudio();
+
+    startupSetup();
   });
 
   await startBot(bot);

@@ -12,6 +12,9 @@ import resume from "./resume.ts";
 import getQueue from "./getQueue.ts";
 import setBass from "./setBass.ts";
 import setTreble from "./setTreble.ts";
+import leave from "./leave.ts";
+import join from "./join.ts";
+import massNickname from "./massNickname.ts";
 
 export default async () => {
   // Affect track
@@ -34,6 +37,10 @@ export default async () => {
 
   // Misc
   await listGuildConfig();
+  await leave();
+  await join();
+
+  await massNickname();
 
   bot.commandManager.registerListener();
 };

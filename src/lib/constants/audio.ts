@@ -28,8 +28,8 @@ export const audioSourcePitchNames = {
 
 export const audioSourceBassValues = {
   [AudioSourceFilterStep.High3]: 15,
-  [AudioSourceFilterStep.High2]: 10,
-  [AudioSourceFilterStep.High1]: 5,
+  [AudioSourceFilterStep.High2]: 5,
+  [AudioSourceFilterStep.High1]: 2.5,
   [AudioSourceFilterStep.Normal]: 0,
   [AudioSourceFilterStep.Low1]: 0,
   [AudioSourceFilterStep.Low2]: 0,
@@ -38,8 +38,8 @@ export const audioSourceBassValues = {
 
 export const audioSourceBassNames = {
   [AudioSourceFilterStep.High3]: "WET",
-  [AudioSourceFilterStep.High2]: "Blast Me",
-  [AudioSourceFilterStep.High1]: "Heavy",
+  [AudioSourceFilterStep.High2]: "Heavy",
+  [AudioSourceFilterStep.High1]: "Boosted",
   [AudioSourceFilterStep.Normal]: "Normal",
   [AudioSourceFilterStep.Low1]: "Unnamed",
   [AudioSourceFilterStep.Low2]: "Unnamed",
@@ -48,8 +48,8 @@ export const audioSourceBassNames = {
 
 export const audioSourceTrebleValues = {
   [AudioSourceFilterStep.High3]: 15,
-  [AudioSourceFilterStep.High2]: 10,
-  [AudioSourceFilterStep.High1]: 5,
+  [AudioSourceFilterStep.High2]: 5,
+  [AudioSourceFilterStep.High1]: 2.5,
   [AudioSourceFilterStep.Normal]: 0,
   [AudioSourceFilterStep.Low1]: 0,
   [AudioSourceFilterStep.Low2]: 0,
@@ -57,9 +57,9 @@ export const audioSourceTrebleValues = {
 };
 
 export const audioSourceTrebleNames = {
-  [AudioSourceFilterStep.High3]: "Just no!",
-  [AudioSourceFilterStep.High2]: "Wind up Radio",
-  [AudioSourceFilterStep.High1]: "Tinny",
+  [AudioSourceFilterStep.High3]: "Wind up Radio",
+  [AudioSourceFilterStep.High2]: "Tinny",
+  [AudioSourceFilterStep.High1]: "Sharper",
   [AudioSourceFilterStep.Normal]: "Normal",
   [AudioSourceFilterStep.Low1]: "Unnamed",
   [AudioSourceFilterStep.Low2]: "Unnamed",

@@ -5,8 +5,13 @@ import productionConfig from "./production.config.ts";
 export interface Config {
   dataDir: string;
   tmpDir: string;
+  authSecret: string;
+
+  internal: {
+    serverAddress: string;
+  };
   discord: {
-    token?: string;
+    token: string;
     botId?: bigint;
   };
   oak: {

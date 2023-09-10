@@ -23,7 +23,7 @@ export default class AudioSource {
   public readonly sourceFilePath: string;
   public sourceDetails: AudioSourceDetails;
 
-  public readonly downloadProcess: Deno.ChildProcess;
+  public readonly downloadProcess?: Deno.ChildProcess;
   public metadataExtractionPromise?: Promise<void>;
 
   public readonly broadcastChannelId?: bigint;
@@ -33,7 +33,7 @@ export default class AudioSource {
     query: string,
     sourceFilePath: string,
     sourceDetails: AudioSourceDetails,
-    downloadProcess: Deno.ChildProcess,
+    downloadProcess?: Deno.ChildProcess,
     broadcastChannelId?: bigint,
     submitterMemberId?: bigint
   ) {
@@ -48,6 +48,8 @@ export default class AudioSource {
   }
 
   public async destroy() {
+    if (this.sourceDetails.type === AudioSourceType.File) return;
+
     try {
       await Deno.remove(this.sourceFilePath);
     } catch (err: any) {
@@ -67,6 +69,12 @@ export default class AudioSource {
     this.createTmpDir();
 
     return this.parseQuery(query, broadcastChannelId, submitterMemberId);
+  }
+
+  public static fromPath(path: string) {
+    return new AudioSource("Automatic Track", path, {
+      type: AudioSourceType.File,
+    });
   }
 
   private static createTmpDir() {
@@ -151,6 +159,7 @@ export default class AudioSource {
     [AudioSourceType.YouTube]: AudioSource.getYtSource,
     [AudioSourceType.Spotify]: AudioSource.getSpotSource,
     [AudioSourceType.SoundCloud]: AudioSource.getScSource,
+    [AudioSourceType.File]: AudioSource.getYtSearchSource,
     [AudioSourceType.Unknown]: AudioSource.getYtSearchSource,
   };
 
@@ -302,7 +311,7 @@ export default class AudioSource {
 
   private async extractMetadata() {
     const fetchMetadata = async () => {
-      await this.downloadProcess.output();
+      await this.downloadProcess?.output();
 
       const { stdout } = await new Deno.Command("ffprobe", {
         args: [
