@@ -8,7 +8,7 @@ export default async () => {
       description: "Gets the current time of the track playing.",
     },
     async (interaction) => {
-      const { guildId } = interaction;
+      const { guildId, channelId } = interaction;
 
       if (!guildId) return "Invalid input";
 
@@ -16,6 +16,7 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
+      player.setBroadcastChannel(channelId);
       const currentTime = player.getCurrentTrackTime();
 
       if (!currentTime) return "There is no track playing at the moment.";

@@ -7,7 +7,7 @@ export default async () => {
       description: "Connect the bot to your channel.",
     },
     async (interaction) => {
-      const { guildId } = interaction;
+      const { guildId, channelId } = interaction;
 
       if (!guildId) return "Invalid input";
 
@@ -22,6 +22,7 @@ export default async () => {
       if (player.getBotVoiceChannelId() === userChannelId)
         return "I'm already in your channel.";
 
+      player.setBroadcastChannel(channelId);
       await player.joinChannel(bot, userChannelId);
 
       return "I'll be right there!";

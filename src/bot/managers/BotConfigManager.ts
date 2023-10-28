@@ -59,6 +59,10 @@ export default class BotConfigManager {
     }
   }
 
+  setConfig(config: BotConfig) {
+    this.config = config;
+  }
+
   readDir() {
     try {
       return Deno.readDirSync(dataDir);

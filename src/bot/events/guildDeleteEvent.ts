@@ -1,11 +1,14 @@
-import guildUpdate from "../../api/discord/guilds/guildUpdate.ts";
-import { Guild } from "../../deps/discordeno.ts";
+import guildUpdate from "../../api/internal/discord/guilds/guildUpdate.ts";
 import { log } from "../../lib/utils/generic.ts";
 import { GuildConfig } from "../managers/BotConfigManager.ts";
 import { bot } from "../setupBot.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildDelete", (_bot, id) => {
+    const guildId = id.toString();
+
+    if (bot.cache.guilds[guildId]) delete bot.cache.guilds[guildId];
+
     const guildConfig = bot.configManager.getGuildConfig(id);
 
     if (!guildConfig) return;

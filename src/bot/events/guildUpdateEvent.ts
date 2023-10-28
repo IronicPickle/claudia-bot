@@ -1,4 +1,4 @@
-import guildUpsert from "../../api/discord/guilds/guildUpsert.ts";
+import guildUpsert from "../../api/internal/discord/guilds/guildUpsert.ts";
 import { Guild } from "../../deps/discordeno.ts";
 import { log } from "../../lib/utils/generic.ts";
 import { GuildConfig } from "../managers/BotConfigManager.ts";
@@ -8,13 +8,15 @@ export default () => {
   bot.eventManager.addEventListener("guildUpdate", async (_bot, guild) => {
     const { id } = guild;
 
-    if (bot.cache.guilds.has(guild)) bot.cache.guilds.delete(guild);
-    bot.cache.guilds.add(guild);
+    const guildId = id.toString();
+
+    if (bot.cache.guilds[guildId]) delete bot.cache.guilds[guildId];
+    bot.cache.guilds[guildId] = guild;
 
     const guildConfig = bot.configManager.getGuildConfig(id);
 
     if (!guildConfig) await initGuild(guild);
-    else if (!guildConfig.active) await updateGuild(guild, guildConfig);
+    else await updateGuild(guild, guildConfig);
   });
 };
 

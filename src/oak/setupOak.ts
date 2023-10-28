@@ -2,13 +2,13 @@ import config from "../config/config.ts";
 import { Application, Router } from "../deps/oak.ts";
 import { log } from "../lib/utils/generic.ts";
 
-import test from "./test/test.ts";
+import internalEventStartup from "./internal/events/startup.ts";
 
 export const app = new Application();
 export const router = new Router();
 
 export default () => {
-  test();
+  internalEventStartup();
 
   app.use(router.routes());
   app.use(router.allowedMethods());

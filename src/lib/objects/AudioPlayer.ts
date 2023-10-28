@@ -1,6 +1,6 @@
-import { cryptoRandomString } from "../../deps/deps.ts";
 import {
   Bot,
+  CreateMessage,
   VoiceCloseEventCodes,
   VoiceOpcodes,
 } from "../../deps/discordeno.ts";
@@ -27,7 +27,6 @@ import {
   iterateReader,
   readerFromStreamReader,
 } from "https://deno.land/std@0.152.0/streams/conversion.ts";
-import { randomNum } from "../../../../claudia-shared/lib/utils/generic.ts";
 
 export const defaultFilters: AudioPlayerFilters = {
   pitch: 1,
@@ -59,7 +58,7 @@ export default class AudioPlayer extends EventManager<
   private udpSessionDetails?: AudioPlayerUdpSessionDetails;
 
   private heartbeatInterval?: number;
-  private heartbeatIntervalId?: number;
+  private heartbeatTimeoutId?: number;
 
   private queue: AudioSource[] = [];
 
@@ -85,6 +84,8 @@ export default class AudioPlayer extends EventManager<
   private emptyFramesPrepared = 0;
   private nextPacket?: Uint8Array;
   private isSpeaking = false;
+
+  private broadcastChannelId?: bigint;
 
   constructor(bot: Bot & AudioBot, guildId: bigint) {
     super();
@@ -382,6 +383,15 @@ export default class AudioPlayer extends EventManager<
     });
   }
 
+  private async broadcast(options: CreateMessage) {
+    if (!this.broadcastChannelId) return;
+    return await this.bot.helpers.sendMessage(this.broadcastChannelId, options);
+  }
+
+  public setBroadcastChannel(broadcastChannelId?: bigint) {
+    this.broadcastChannelId = broadcastChannelId;
+  }
+
   public canPrepare() {
     return (
       !this.isPaused &&
@@ -605,12 +615,12 @@ export default class AudioPlayer extends EventManager<
     await this.bot.helpers.leaveVoiceChannel(this.guildId);
   }
 
-  private tryInitSocket() {
+  private async tryInitSocket() {
     if (!this.wsServerDetails || !this.wsSessionDetails || this.webSocket)
       return;
 
+    await this.initUdpSocket();
     this.initWebSocket();
-    this.initUdpSocket();
   }
 
   private tryReconnect() {
@@ -645,13 +655,35 @@ export default class AudioPlayer extends EventManager<
     });
   }
 
-  private initUdpSocket() {
-    const port = randomNum(1000, 5000);
+  private async initUdpSocket() {
+    let port = 1000;
+    const maxPort = 5000;
 
-    this.udpSocket = Deno.listenDatagram({
-      hostname: "0.0.0.0",
-      port,
-      transport: "udp",
+    while (port <= maxPort) {
+      try {
+        this.udpSocket = Deno.listenDatagram({
+          hostname: "0.0.0.0",
+          port,
+          transport: "udp",
+        });
+        AudioPlayer.log("UDP", "Found port", port, "binding...");
+        return;
+      } catch (_err) {
+        port++;
+      }
+    }
+
+    AudioPlayer.log(
+      "UDP",
+      "Exceeded max port range - halting bot audio playback",
+      1001
+    );
+
+    await this.resetSession();
+    await this.leaveChannel();
+
+    await this.broadcast({
+      content: "Max connections has been succeeded, please try again later.",
     });
   }
 
@@ -689,7 +721,7 @@ export default class AudioPlayer extends EventManager<
 
         const { heartbeat_interval } = d;
 
-        this.heartbeatInterval = heartbeat_interval;
+        this.heartbeatInterval = heartbeat_interval - 100;
 
         this.startHeartbeat();
 
@@ -698,7 +730,7 @@ export default class AudioPlayer extends EventManager<
         break;
       }
       case VoiceOpcodes.SessionDescription: {
-        AudioPlayer.log("WS", "UDP discovery successful.");
+        AudioPlayer.log("WS", "UDP connection established.");
 
         const { video_codec, secret_key, mode, media_session_id, audio_codec } =
           d;
@@ -715,7 +747,7 @@ export default class AudioPlayer extends EventManager<
 
         break;
       }
-      case VoiceOpcodes.HeartbeatACK: {
+      case VoiceOpcodes.Heartbeat: {
         AudioPlayer.log("WS", "Heartbeat successful.", { nonce: d });
       }
     }
@@ -820,18 +852,35 @@ export default class AudioPlayer extends EventManager<
   }
 
   private startHeartbeat() {
-    if (!this.heartbeatInterval)
+    if (this.heartbeatInterval == null)
       return console.error("Missing heartbeat interval");
 
-    this.heartbeatIntervalId = setInterval(() => {
+    const interval = this.heartbeatInterval;
+    let lastSentAt = Date.now();
+
+    clearTimeout(this.heartbeatTimeoutId);
+
+    const send = () => {
       if (!this.webSocket) return console.error("Missing web socket");
 
+      lastSentAt = Date.now();
+
       this.ws.heartbeat();
-    }, this.heartbeatInterval);
+
+      this.heartbeatTimeoutId = setTimeout(
+        send,
+        interval + (lastSentAt - Date.now())
+      );
+    };
+
+    this.heartbeatTimeoutId = setTimeout(
+      send,
+      interval + (lastSentAt - Date.now())
+    );
   }
 
   private stopHeartbeat() {
-    clearInterval(this.heartbeatIntervalId);
+    clearTimeout(this.heartbeatTimeoutId);
   }
 
   private wsSend(payload: Record<any, any>) {
@@ -947,16 +996,13 @@ export default class AudioPlayer extends EventManager<
     heartbeat: () => {
       if (!this.webSocket) return console.error("Missing web socket");
 
-      AudioPlayer.log("WS", "Sending heartbeat");
+      const nonce = Date.now();
+
+      AudioPlayer.log("WS", "Sending heartbeat", { nonce });
 
       this.wsSend({
         op: VoiceOpcodes.Heartbeat,
-        d: parseInt(
-          cryptoRandomString({
-            length: 13,
-            type: "numeric",
-          })
-        ),
+        d: nonce,
       });
     },
   };

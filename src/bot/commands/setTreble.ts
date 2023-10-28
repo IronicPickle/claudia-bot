@@ -39,7 +39,7 @@ export default async () => {
       ],
     },
     async (interaction) => {
-      const { guildId, data: { options } = {} } = interaction;
+      const { guildId, channelId, data: { options } = {} } = interaction;
 
       const { treble: trebleOption } = parseCommandOptions<{
         treble: AudioSourceFilterStep;
@@ -56,6 +56,7 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
+      player.setBroadcastChannel(channelId);
       player.setFilters({
         treble: trebleValue,
       });

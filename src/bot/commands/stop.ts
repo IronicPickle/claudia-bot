@@ -7,7 +7,7 @@ export default async () => {
       description: "Stop the audio player and clear the queue.",
     },
     async (interaction) => {
-      const { guildId } = interaction;
+      const { guildId, channelId } = interaction;
 
       if (!guildId) return "Invalid input";
 
@@ -18,6 +18,7 @@ export default async () => {
       if (!player.getCurrentTrack())
         return "There is no track playing at the moment.";
 
+      player.setBroadcastChannel(channelId);
       await player.stopTrack();
 
       return "I've told the audio player to stop playing and clear the queue.";

@@ -7,7 +7,7 @@ export default async () => {
       description: "Disconnect the bot from the channel.",
     },
     async (interaction) => {
-      const { guildId } = interaction;
+      const { guildId, channelId } = interaction;
 
       if (!guildId) return "Invalid input";
 
@@ -18,6 +18,7 @@ export default async () => {
       if (!player.getBotVoiceChannelId())
         return "I'm not currently in a channel.";
 
+      player.setBroadcastChannel(channelId);
       await player.leaveChannel();
 
       return "I'll leave...";

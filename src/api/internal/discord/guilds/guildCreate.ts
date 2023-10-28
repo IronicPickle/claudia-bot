@@ -1,6 +1,6 @@
-import { RequestInputs } from "../../../../../claudia-shared/lib/ts/api/generic.ts";
-import { GuildCreate } from "../../../../../claudia-shared/lib/ts/api/server/internal/guilds/guilds.ts";
-import { apiCall, api } from "./../../api.ts";
+import { RequestInputs } from "../../../../../../claudia-shared/lib/ts/api/generic.ts";
+import { GuildCreate } from "../../../../../../claudia-shared/lib/ts/api/server/internal/discord/guilds.ts";
+import { apiCall, api } from "../../../api.ts";
 
 export default async ({ body }: RequestInputs<GuildCreate>) =>
   await apiCall(

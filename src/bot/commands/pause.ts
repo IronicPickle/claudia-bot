@@ -7,7 +7,7 @@ export default async () => {
       description: "Pause the current track.",
     },
     async (interaction) => {
-      const { guildId } = interaction;
+      const { guildId, channelId } = interaction;
 
       if (!guildId) return "Invalid input";
 
@@ -20,6 +20,7 @@ export default async () => {
 
       if (player.getIsPaused()) return "The current track is already paused.";
 
+      player.setBroadcastChannel(channelId);
       player.pauseTrack();
 
       return "I've told the audio player to pause the current track.";

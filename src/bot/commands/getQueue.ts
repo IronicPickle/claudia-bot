@@ -9,7 +9,7 @@ export default async () => {
     },
     // @ts-ignore: discordeno uses wrong type here, should be string
     async (interaction) => {
-      const { guildId } = interaction;
+      const { guildId, channelId } = interaction;
 
       if (!guildId) return "Invalid input";
 
@@ -20,6 +20,7 @@ export default async () => {
       if (!player.getCurrentTrack())
         return "There is no track playing at the moment.";
 
+      player.setBroadcastChannel(channelId);
       const queue = player.getQueue().slice(0, 10);
 
       const fields = queue.map(({ sourceDetails }) => ({

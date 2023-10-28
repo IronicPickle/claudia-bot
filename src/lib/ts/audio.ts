@@ -46,7 +46,7 @@ export interface VoiceWsEventData {
       modes: string[];
     };
   };
-  [VoiceOpcodes.Heartbeat]: {};
+  // [VoiceOpcodes.Heartbeat]: {};
   [VoiceOpcodes.SessionDescription]: {
     op: VoiceOpcodes.SessionDescription;
     d: {
@@ -58,8 +58,8 @@ export interface VoiceWsEventData {
     };
   };
   [VoiceOpcodes.Speaking]: {};
-  [VoiceOpcodes.HeartbeatACK]: {
-    op: VoiceOpcodes.HeartbeatACK;
+  [VoiceOpcodes.Heartbeat]: {
+    op: VoiceOpcodes.Heartbeat;
     d: number;
   };
   [VoiceOpcodes.Resume]: {};
@@ -79,7 +79,7 @@ export type VoiceWsRes =
   | VoiceWsEventData[VoiceOpcodes.Resumed]
   | VoiceWsEventData[VoiceOpcodes.SessionDescription]
   | VoiceWsEventData[VoiceOpcodes.Hello]
-  | VoiceWsEventData[VoiceOpcodes.HeartbeatACK];
+  | VoiceWsEventData[VoiceOpcodes.Heartbeat];
 
 export interface AudioBot extends Bot {
   audio: {

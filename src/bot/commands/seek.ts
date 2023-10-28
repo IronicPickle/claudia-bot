@@ -33,7 +33,7 @@ export default async () => {
       ],
     },
     async (interaction) => {
-      const { guildId, data: { options } = {} } = interaction;
+      const { guildId, channelId, data: { options } = {} } = interaction;
 
       const {
         hours: hoursOption,
@@ -71,6 +71,7 @@ export default async () => {
       if (secondsTotal > Math.floor(duration))
         return `You cannot seek beyond ${parsedDuration.hoursPadded}:${parsedDuration.minutesPadded}:${parsedDuration.secondsPadded} on this track.`;
 
+      player.setBroadcastChannel(channelId);
       player.seek(secondsTotal);
 
       const parsedSecondsTotal = parseTime(secondsTotal);

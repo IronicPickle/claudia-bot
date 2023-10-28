@@ -25,7 +25,7 @@ export default async () => {
       ],
     },
     async (interaction) => {
-      const { guildId, user, data: { options } = {} } = interaction;
+      const { guildId, channelId, user, data: { options } = {} } = interaction;
 
       const { query: queryOption } = parseCommandOptions<{
         query: string;
@@ -38,11 +38,13 @@ export default async () => {
       if (!interaction.member) return "This command must be used in a server.";
 
       const player = bot.audio.players[guildId.toString()];
-      const channelId = player.getVoiceUserChannel(user.id);
+      const userChannelId = player.getVoiceUserChannel(user.id);
 
-      if (!channelId) return "You must be in a voice channel to play a track.";
+      if (!userChannelId)
+        return "You must be in a voice channel to play a track.";
 
-      await player.joinChannel(bot, channelId);
+      player.setBroadcastChannel(channelId);
+      await player.joinChannel(bot, userChannelId);
       const audioSource = await player.queueTrack(
         query,
         interaction.channelId,
