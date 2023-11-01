@@ -1,5 +1,5 @@
 import { RequestInputs } from "../../../../../../claudia-shared/lib/ts/api/generic.ts";
-import { GuildUpdate } from "../../../../../../claudia-shared/lib/ts/api/server/internal/discord/guilds.ts";
+import { GuildUpdate } from "../../../../../../claudia-shared/lib/api/server/internal/discord/guilds/guildsSpec.ts";
 import { apiCall, api } from "../../../api.ts";
 
 export default async ({

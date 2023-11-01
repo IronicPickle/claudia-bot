@@ -1,63 +1,71 @@
 import guildUpsert from "../../api/internal/discord/guilds/guildUpsert.ts";
-import { Guild } from "../../deps/discordeno.ts";
+import { Guild, Member } from "../../deps/discordeno.ts";
+import DbTransformer from "../../lib/objects/DbTransformer.ts";
+import { getAllMembers } from "../../lib/utils/bot.ts";
 import { log } from "../../lib/utils/generic.ts";
 import { GuildConfig } from "../managers/BotConfigManager.ts";
 import { bot } from "../setupBot.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildCreate", async (_bot, guild) => {
-    const { id } = guild;
+    const guildConfig = bot.configManager.getGuildConfig(guild.id);
 
-    const guildId = id.toString();
+    const members = await updateCache(guild);
 
-    if (bot.cache.guilds[guildId]) delete bot.cache.guilds[guildId];
-    bot.cache.guilds[guildId] = guild;
-
-    const guildConfig = bot.configManager.getGuildConfig(id);
-
-    if (!guildConfig) await initGuild(guild);
-    else if (!guildConfig.active) await updateGuild(guild, guildConfig);
+    if (!guildConfig) await initGuild(guild, Object.values(members));
+    else if (!guildConfig.active)
+      await updateGuild(guild, Object.values(members), guildConfig);
   });
 };
 
-const initGuild = async (guild: Guild) => {
-  const { id, name } = guild;
+const updateCache = async (guild: Guild) => {
+  const guildId = guild.id.toString();
 
-  log(`Bot joined guild for first time: '${id}' (${name}), initialising...`);
+  bot.cache.guildCount++;
 
-  bot.configManager.initGuildConfig(id);
+  const members = await getAllMembers(bot, guild.id);
 
-  await upsert(guild);
+  bot.cache.guilds[guildId] = { ...guild, members };
+
+  return members;
 };
 
-const updateGuild = async (guild: Guild, guildConfig: GuildConfig) => {
-  const { id, name } = guild;
+const initGuild = async (guild: Guild, members: Member[]) => {
+  log(
+    `Bot joined guild for first time: '${guild.id}' (${guild.name}), initialising...`
+  );
 
-  log(`Bot rejoined guild: '${id}' (${name}), updating...`);
+  // Init config
+  bot.configManager.initGuildConfig(guild.id);
 
+  await upsert(guild, members);
+};
+
+const updateGuild = async (
+  guild: Guild,
+  members: Member[],
+  guildConfig: GuildConfig
+) => {
+  log(`Bot rejoined guild: '${guild.id}' (${guild.name}), updating...`);
+
+  // Update config
   guildConfig.active = true;
+  bot.configManager.updateGuildConfig(guild.id, guildConfig);
 
-  bot.configManager.updateGuildConfig(id, guildConfig);
-
-  await upsert(guild);
+  await upsert(guild, members);
 };
 
-const upsert = async (guild: Guild) => {
-  const { id, name, description, joinedAt } = guild;
+const upsert = async (guild: Guild, members: Member[]) => {
+  const { guildId, ...body } = DbTransformer.guild(guild, members, true);
 
   const { error: upsertError } = await guildUpsert({
     params: {
-      guildId: id.toString(),
+      guildId,
     },
-    body: {
-      active: true,
-      name,
-      description,
-      joinedAt,
-    },
+    body,
   });
 
-  if (upsertError) log(upsertError.error);
+  if (upsertError) log(upsertError);
 };
 
 //https://discord.com/oauth2/authorize?client_id=1124008138811646134&permissions=8&scope=bot

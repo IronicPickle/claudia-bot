@@ -10,7 +10,7 @@ import configManagerWrapper from "./wrappers/configManagerWrapper.ts";
 import setupAudio from "./audio/setupAudio.ts";
 import sodium from "../deps/sodium.ts";
 import cacheWrapper from "./wrappers/cacheWrapper.ts";
-import startupSetup from "./startupSetup.ts";
+import startupSetup from "../startupSetup.ts";
 
 await sodium.ready;
 

@@ -5,11 +5,14 @@ import { log } from "../../lib/utils/generic.ts";
 import { bot } from "../setupBot.ts";
 
 export default () => {
-  bot.eventManager.addEventListener("guildMemberAdd", async (_bot, member) => {
-    updateCache(member);
+  bot.eventManager.addEventListener(
+    "guildMemberUpdate",
+    async (_bot, member) => {
+      updateCache(member);
 
-    await updateMember(member);
-  });
+      await updateMember(member);
+    }
+  );
 };
 
 const updateCache = (member: Member) => {
@@ -20,7 +23,7 @@ const updateCache = (member: Member) => {
 };
 
 const updateMember = async (member: Member) => {
-  log(`Member joined guild: '${member.id}', updating...`);
+  log(`Member updated: '${member.id}', updating...`);
 
   await upsert(member);
 };

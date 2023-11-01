@@ -1,45 +1,50 @@
 import guildUpdate from "../../api/internal/discord/guilds/guildUpdate.ts";
+import { Guild } from "../../deps/discordeno.ts";
 import { log } from "../../lib/utils/generic.ts";
 import { GuildConfig } from "../managers/BotConfigManager.ts";
 import { bot } from "../setupBot.ts";
 
 export default () => {
-  bot.eventManager.addEventListener("guildDelete", (_bot, id) => {
+  bot.eventManager.addEventListener("guildDelete", async (_bot, id) => {
     const guildId = id.toString();
 
-    if (bot.cache.guilds[guildId]) delete bot.cache.guilds[guildId];
+    const guild = bot.cache.guilds[guildId];
+
+    updateCache(guildId);
 
     const guildConfig = bot.configManager.getGuildConfig(id);
 
-    if (!guildConfig) return;
+    if (!guildConfig || !guild) return;
 
-    guildConfig.active = false;
-
-    bot.configManager.updateGuildConfig(id, guildConfig);
-
-    updateGuild(id, guildConfig);
+    await updateGuild(guild, guildConfig);
   });
 };
 
-const updateGuild = async (id: bigint, guildConfig: GuildConfig) => {
-  log(`Bot left guild: '${id}', updating...`);
+const updateCache = (guildId: string) => {
+  bot.cache.guildCount--;
 
-  guildConfig.active = false;
-
-  bot.configManager.updateGuildConfig(id, guildConfig);
-
-  await update(id);
+  delete bot.cache.guilds[guildId];
 };
 
-const update = async (id: bigint) => {
+const updateGuild = async (guild: Guild, guildConfig: GuildConfig) => {
+  log(`Bot left guild: '${guild.id}', updating...`);
+
+  // Update config
+  guildConfig.active = false;
+  bot.configManager.updateGuildConfig(guild.id, guildConfig);
+
+  await update(guild);
+};
+
+const update = async (guild: Guild) => {
   const { error: upsertError } = await guildUpdate({
     params: {
-      guildId: id.toString(),
+      guildId: guild.id.toString(),
     },
     body: {
       active: false,
     },
   });
 
-  if (upsertError) log(upsertError.error);
+  if (upsertError) log(upsertError);
 };

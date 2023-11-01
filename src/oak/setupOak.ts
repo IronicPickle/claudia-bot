@@ -1,3 +1,5 @@
+import { httpMethodColors } from "../../../claudia-shared/lib/constants/generic.ts";
+import { ConsoleColor } from "../../../claudia-shared/lib/enums/generic.ts";
 import config from "../config/config.ts";
 import { Application, Router } from "../deps/oak.ts";
 import { log } from "../lib/utils/generic.ts";
@@ -8,6 +10,23 @@ export const app = new Application();
 export const router = new Router();
 
 export default () => {
+  app.use(async ({ request }, next) => {
+    log(
+      ConsoleColor.Green,
+      "[Oak]",
+      ConsoleColor.Bright,
+      httpMethodColors[request.method],
+      request.method,
+      ConsoleColor.Reset,
+      "-",
+      ConsoleColor.Cyan,
+      request.url.pathname,
+      ConsoleColor.Reset
+    );
+
+    await next();
+  });
+
   internalEventStartup();
 
   app.use(router.routes());
