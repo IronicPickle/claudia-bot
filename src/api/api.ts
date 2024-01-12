@@ -1,8 +1,8 @@
 import config from "../config/config.ts";
 import { ApiError } from "../../../claudia-shared/lib/ts/api/generic.ts";
 import { GenericErrorCode } from "../../../claudia-shared/lib/enums/api.ts";
-import ky, { KyResponse } from "https://esm.sh/ky@0.33.3";
-export * from "https://esm.sh/ky@0.33.3";
+import ky, { KyResponse } from "../deps/ky.ts";
+import { encodeSessionJwt } from "../lib/utils/api.ts";
 
 const isKyError = (
   err: any
@@ -26,10 +26,23 @@ export const getErrorFromApiErr = async <K extends string | number | symbol>(
   } as ApiError<K>;
 };
 
+const injectJwt = async (req: Request) => {
+  const currentJwt = req.headers.get("Authorization")?.replace("BEARER ", "");
+  if (!currentJwt) {
+    const newJwt = await encodeSessionJwt("internal");
+    api.extend({
+      headers: {
+        Authorization: `BEARER ${newJwt}`,
+      },
+    });
+    req.headers.set("Authorization", newJwt);
+  }
+};
+
 export const api = ky.create({
   prefixUrl: config.internal.serverAddress,
   hooks: {
-    beforeRequest: [(req, options) => {}],
+    beforeRequest: [injectJwt],
     beforeError: [
       (error) => {
         return error;

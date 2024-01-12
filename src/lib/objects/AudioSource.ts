@@ -225,7 +225,7 @@ export default class AudioSource {
     const url = `https://open.spotify.com/track/${id}`;
 
     try {
-      const downloadProcess = new Deno.Command("spotDl", {
+      const downloadProcess = new Deno.Command("spotdl", {
         args: [url, "--format", format, "--output", `${sourceFilePath}`],
       }).spawn();
 
