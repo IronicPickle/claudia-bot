@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionTypes } from "../../deps/discordeno.ts";
-import { defaultFilters } from "../../lib/objects/AudioPlayer.ts";
+import { defaultFilters } from "../../lib/objects/AudioStream.ts";
 import { parseCommandOptions } from "../../lib/utils/generic.ts";
 import { bot } from "../setupBot.ts";
 
@@ -34,7 +34,7 @@ export default async () => {
       const player = bot.audio.players[guildId.toString()];
 
       player.setBroadcastChannel(channelId);
-      player.setFilters({
+      player.stream.setFilters({
         volume,
       });
 

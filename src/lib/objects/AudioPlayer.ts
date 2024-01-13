@@ -8,32 +8,19 @@ import sodium from "../../deps/sodium.ts";
 import {
   AudioBot,
   VoiceWsRes,
-  AudioAsyncIterator,
   AudioPlayerWsServerDetails,
   AudioPlayerWsSessionDetials,
-  AudioPlayerFilters,
   AudioPlayerUdpServerDetails,
   AudioPlayerUdpSessionDetails,
 } from "../ts/audio.ts";
 import { createUserAt, isUint8Arr, log, parseTime } from "../utils/generic.ts";
 import AudioSource from "./AudioSource.ts";
-import { CHANNELS, FRAME_SIZE, SAMPLE_RATE } from "../constants/audio.ts";
-import opus from "../../deps/opus.ts";
+import { FRAME_SIZE } from "../constants/audio.ts";
 import { audioSourceTypeNames } from "../constants/generic.ts";
 import { AudioSourceType } from "../enums/audio.ts";
 import dayjs from "../../deps/dayjs.ts";
 import EventManager from "./EventManager.ts";
-import {
-  iterateReader,
-  readerFromStreamReader,
-} from "https://deno.land/std@0.152.0/streams/conversion.ts";
-
-export const defaultFilters: AudioPlayerFilters = {
-  pitch: 1,
-  volume: 50,
-  bass: 0,
-  treble: 0,
-};
+import AudioStream, { AudioStreamEvent } from "./AudioStream.ts";
 
 export default class AudioPlayer extends EventManager<
   "userJoin" | "userLeave",
@@ -43,6 +30,8 @@ export default class AudioPlayer extends EventManager<
   }
 > {
   private bot: Bot & AudioBot;
+
+  public readonly stream: AudioStream;
 
   private voiceUserChannels: Record<string, bigint> = {};
 
@@ -60,38 +49,41 @@ export default class AudioPlayer extends EventManager<
   private heartbeatInterval?: number;
   private heartbeatTimeoutId?: number;
 
-  private queue: AudioSource[] = [];
-
-  private opusEncoder = new opus.Encoder({
-    sample_rate: SAMPLE_RATE,
-    channels: CHANNELS,
-    application: "audio",
-  });
-
-  private ffmpegProcess?: Deno.ChildProcess;
-  private ffmpegStream?: ReadableStreamDefaultReader<Uint8Array>;
-  private currentIterator?: AudioAsyncIterator;
-
-  private isPaused = false;
+  private nextPacket?: Uint8Array;
 
   private sequence = 0;
   private timestamp = 0;
 
-  private currentTrackStartedAt?: dayjs.Dayjs;
-
-  private filters: AudioPlayerFilters = defaultFilters;
-
   private emptyFramesPrepared = 0;
-  private nextPacket?: Uint8Array;
   private isSpeaking = false;
 
   private broadcastChannelId?: bigint;
 
-  constructor(bot: Bot & AudioBot, guildId: bigint) {
+  constructor(bot: Bot & AudioBot, stream: AudioStream, guildId: bigint) {
     super();
 
     this.bot = bot;
+    this.stream = stream;
     this.guildId = guildId;
+
+    this.bindEvents();
+  }
+
+  private bindEvents() {
+    this.stream.addEventListener(AudioStreamEvent.TrackStart, () =>
+      this.broadcastUpNext()
+    );
+    this.stream.addEventListener(AudioStreamEvent.QueueAdd, (audioSource) =>
+      this.broadcastAddedToQueue(audioSource)
+    );
+
+    this.stream.addEventListener(
+      AudioStreamEvent.PacketPrepare,
+      (streamPacket) => this.preparePacket(streamPacket)
+    );
+    this.stream.addEventListener(AudioStreamEvent.PacketDispatch, () =>
+      this.dispatchPacket()
+    );
   }
 
   public static log(type: "WS" | "UDP" | null, ...args: any[]) {
@@ -132,153 +124,8 @@ export default class AudioPlayer extends EventManager<
     return this.getVoiceUserChannel(this.bot.id);
   }
 
-  public getCurrentTrack(): AudioSource | undefined {
-    return this.queue[0];
-  }
-
-  public getCurrentTrackTime() {
-    if (!this.currentTrackStartedAt) return;
-    return dayjs().diff(this.currentTrackStartedAt, "seconds");
-  }
-
-  private async reencodeCurrentTrack(
-    seconds: number | undefined = this.getCurrentTrackTime()
-  ) {
-    if (seconds == null) return;
-
-    await this.skipTrack();
-    this.prepareTrack(seconds);
-  }
-
-  public playFile(filePath: string) {
-    const audioSource = AudioSource.fromPath(filePath);
-
-    if (!audioSource) return null;
-
-    this.queue.unshift(audioSource);
-    AudioPlayer.log(null, "Playing");
-    if (!this.currentIterator) this.prepareTrack();
-    if (this.isPaused) this.resumeTrack();
-  }
-
-  public async queueTrack(
-    query: string,
-    broadcastChannelId?: bigint,
-    submitterMemberId?: bigint
-  ) {
-    const audioSource = AudioSource.from(
-      query,
-      broadcastChannelId,
-      submitterMemberId
-    );
-
-    if (!audioSource) return null;
-
-    this.queue.push(audioSource);
-    AudioPlayer.log(null, "Queueing");
-    if (!this.currentIterator) this.prepareTrack();
-    if (this.isPaused) this.resumeTrack();
-
-    this.broadcastAddedToQueue(audioSource);
-
-    return audioSource;
-  }
-
-  public async stopTrack() {
-    this.queue = [];
-    await this.skipTrack();
-    await this.clearCurrentTrack();
-  }
-
-  public pauseTrack() {
-    this.isPaused = true;
-    this.ws.speaking(false);
-  }
-
-  public resumeTrack() {
-    this.isPaused = false;
-
-    if (this.getCurrentTrack()) this.ws.speaking(true);
-  }
-
-  public getIsPaused() {
-    return this.isPaused;
-  }
-
-  public getQueue() {
-    return this.queue;
-  }
-
-  public async skipTrack() {
-    if (this.currentIterator?.return) await this.currentIterator.return();
-  }
-
-  public async seek(seconds: number) {
-    this.reencodeCurrentTrack(seconds * (2 - this.filters.pitch));
-  }
-
-  public async setFilters(filters: Partial<AudioPlayerFilters>) {
-    const time = this.getCurrentTrackTime();
-    if (time == null) return;
-
-    const oldAdjuster = this.filters.pitch - 1;
-    const oldOffset = time * oldAdjuster;
-
-    if (oldOffset >= 0) {
-      this.currentTrackStartedAt = this.currentTrackStartedAt?.subtract(
-        Math.abs(oldOffset),
-        "seconds"
-      );
-    } else {
-      this.currentTrackStartedAt = this.currentTrackStartedAt?.add(
-        Math.abs(oldOffset),
-        "seconds"
-      );
-    }
-
-    this.filters = { ...this.filters, ...filters };
-
-    const newAdjuster = 1 - this.filters.pitch;
-    const newOffset = time * newAdjuster;
-
-    if (newOffset >= 0) {
-      this.currentTrackStartedAt = this.currentTrackStartedAt?.subtract(
-        Math.abs(newOffset),
-        "seconds"
-      );
-    } else {
-      this.currentTrackStartedAt = this.currentTrackStartedAt?.add(
-        Math.abs(newOffset),
-        "seconds"
-      );
-    }
-
-    await this.reencodeCurrentTrack();
-  }
-
-  public async resetFilter() {
-    await this.setFilters(defaultFilters);
-  }
-
-  private async nextTrack() {
-    this.ws.speaking(false);
-    this.emptyFramesPrepared = 0;
-
-    try {
-      await this.ffmpegStream?.cancel();
-      await this.ffmpegProcess?.status;
-    } catch (err) {
-      console.error(err);
-    }
-
-    this.queue[0].destroy();
-
-    this.queue.shift();
-    this.prepareTrack();
-  }
-
   private async broadcastUpNext() {
-    const currentTrack = this.getCurrentTrack();
+    const currentTrack = this.stream.getCurrentTrack();
     if (!currentTrack || !currentTrack.broadcastChannelId) return;
 
     await currentTrack.metadataExtractionPromise;
@@ -394,103 +241,20 @@ export default class AudioPlayer extends EventManager<
 
   public canPrepare() {
     return (
-      !this.isPaused &&
+      this.stream.canPrepare() &&
       !!this.webSocket &&
       !!this.udpServerDetails &&
       !!this.udpSessionDetails &&
       !!this.wsServerDetails &&
-      !!this.wsSessionDetails &&
-      !!this.currentIterator
+      !!this.wsSessionDetails
     );
   }
 
   public canDispatch() {
-    return !this.isPaused && !!this.nextPacket;
+    return this.stream.canDispatch() && this.nextPacket;
   }
 
-  private async clearCurrentTrack() {
-    try {
-      await this.ffmpegStream?.cancel();
-      await this.ffmpegProcess?.status;
-    } catch (err) {
-      console.error(err);
-    }
-
-    this.nextPacket = undefined;
-    this.currentIterator = undefined;
-    this.ffmpegProcess = undefined;
-    this.ffmpegStream = undefined;
-
-    this.currentTrackStartedAt = undefined;
-  }
-
-  private async prepareTrack(startTime = 0) {
-    await this.clearCurrentTrack();
-
-    const currentTrack = this.getCurrentTrack();
-    if (!currentTrack) return;
-
-    AudioPlayer.log(null, "Waiting for download to finish");
-    await currentTrack.downloadProcess?.output();
-
-    if (this.currentIterator) return;
-
-    if (startTime === 0) this.broadcastUpNext();
-
-    const { hours, minutes, seconds } = parseTime(startTime);
-
-    this.currentTrackStartedAt = dayjs().subtract(startTime, "seconds");
-
-    try {
-      this.ffmpegProcess = new Deno.Command("ffmpeg", {
-        args: [
-          "-i",
-          currentTrack.sourceFilePath,
-
-          "-f",
-          "s16le",
-
-          "-ac",
-          CHANNELS.toString(),
-          "-ar",
-          SAMPLE_RATE.toString(),
-
-          "-af",
-          `asetrate=${SAMPLE_RATE}*${this.filters.pitch},volume=${
-            this.filters.volume / 50
-          },firequalizer=gain_entry='entry(0,${this.filters.bass});entry(250,${
-            this.filters.bass / 2
-          });entry(1000,0);entry(4000,${this.filters.treble / 2});entry(16000,${
-            this.filters.treble
-          })'`,
-
-          "-ss",
-          `${hours}:${minutes}:${seconds}`,
-
-          "pipe:1",
-        ],
-        stdout: "piped",
-      }).spawn();
-
-      const reader = this.ffmpegProcess.stdout.getReader();
-
-      this.ffmpegStream = reader;
-
-      const pcmIterator = iterateReader(readerFromStreamReader(reader));
-
-      const opusIterator = this.opusEncoder.encode_pcm_stream(
-        FRAME_SIZE,
-        pcmIterator
-      );
-
-      this.currentIterator = opusIterator;
-    } catch (err: any) {
-      return console.error("Unable to encode audio file", err);
-    }
-  }
-
-  public async preparePacket() {
-    if (!this.currentIterator) return console.error("Missing current iterator");
+  public async preparePacket(streamPacket?: any) {
     if (!this.udpServerDetails)
       return console.error("Missing udp server details");
     if (!this.udpSessionDetails)
@@ -498,7 +262,6 @@ export default class AudioPlayer extends EventManager<
 
     if (!this.isSpeaking) this.ws.speaking(true);
 
-    let streamPacket = (await this.currentIterator.next()).value;
     if (!streamPacket) {
       if (this.emptyFramesPrepared < 5) {
         streamPacket = new Uint8Array([0xf8, 0xff, 0xfe]);
@@ -510,7 +273,10 @@ export default class AudioPlayer extends EventManager<
           `Prepared empty packet ${this.emptyFramesPrepared}`
         );
       } else {
-        return this.nextTrack();
+        // return this.nextTrack();
+        // go next track
+
+        return;
       }
     }
 
@@ -533,6 +299,11 @@ export default class AudioPlayer extends EventManager<
     const noncePacket = new Uint8Array(24);
     noncePacket.set(headerPacket, 0);
 
+    console.log(
+      { streamPacket, noncePacket },
+      this.udpSessionDetails.secretKey
+    );
+
     const encryptedChunk = sodium.crypto_secretbox_easy(
       streamPacket,
       noncePacket,
@@ -546,10 +317,14 @@ export default class AudioPlayer extends EventManager<
     audioPacket.set(headerPacket, 0);
     audioPacket.set(encryptedChunk, 12);
 
+    console.log("post prepare", audioPacket);
+
     this.nextPacket = audioPacket;
   }
 
   public async dispatchPacket() {
+    console.log("dispatch", this.nextPacket);
+
     if (!this.udpSocket) return console.error("Missing udp socket");
     if (!this.udpServerDetails)
       return console.error("Missing udp server details");
@@ -591,8 +366,6 @@ export default class AudioPlayer extends EventManager<
   }
 
   public closeSession() {
-    this.pauseTrack();
-
     this.webSocket?.close();
     this.webSocket = undefined;
     this.udpSocket?.close();
@@ -712,8 +485,6 @@ export default class AudioPlayer extends EventManager<
       case VoiceOpcodes.Resumed: {
         AudioPlayer.log("WS", "Connection resumed.");
 
-        this.resumeTrack();
-
         break;
       }
       case VoiceOpcodes.Hello: {
@@ -724,8 +495,6 @@ export default class AudioPlayer extends EventManager<
         this.heartbeatInterval = heartbeat_interval - 100;
 
         this.startHeartbeat();
-
-        this.resumeTrack();
 
         break;
       }
@@ -743,8 +512,6 @@ export default class AudioPlayer extends EventManager<
           audioCodec: audio_codec,
         };
 
-        this.resumeTrack();
-
         break;
       }
       case VoiceOpcodes.Heartbeat: {
@@ -755,8 +522,6 @@ export default class AudioPlayer extends EventManager<
 
   private handleWebSocketClose(code: number) {
     AudioPlayer.log("WS", "Socket closed with code: ", code);
-
-    this.pauseTrack();
 
     switch (code) {
       case VoiceCloseEventCodes.SessionNoLongerValid: {

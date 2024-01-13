@@ -15,11 +15,11 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
-      if (!player.getCurrentTrack())
+      if (!player.stream.getCurrentTrack())
         return "There is no track playing at the moment.";
 
       player.setBroadcastChannel(channelId);
-      await player.stopTrack();
+      await player.stream.stopTrack();
 
       return "I've told the audio player to stop playing and clear the queue.";
     }

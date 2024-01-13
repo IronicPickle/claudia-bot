@@ -17,7 +17,7 @@ export default async () => {
       const player = bot.audio.players[guildId.toString()];
 
       player.setBroadcastChannel(channelId);
-      const currentTime = player.getCurrentTrackTime();
+      const currentTime = player.stream.getCurrentTrackTime();
 
       if (!currentTime) return "There is no track playing at the moment.";
 

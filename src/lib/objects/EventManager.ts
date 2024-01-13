@@ -21,13 +21,22 @@ export default class EventManager<
     this.events = {} as Events;
   }
 
-  public addEventListener(
-    eventName: Event,
-    handler: EventHandlers[Event],
+  protected dispatch<E extends Event>(
+    event: E,
+    ...args: Parameters<EventHandlers[E]>
+  ) {
+    for (const { handler } of Object.values(this.events[event] ?? {})) {
+      handler(args);
+    }
+  }
+
+  public addEventListener<E extends Event>(
+    eventName: E,
+    handler: EventHandlers[E],
     once?: boolean
   ) {
     const id = crypto.randomUUID();
-    if (!this.events[eventName]) this.events[eventName] = {} as Events[Event];
+    if (!this.events[eventName]) this.events[eventName] = {} as Events[E];
     this.events[eventName][id] = {
       id,
       handler,

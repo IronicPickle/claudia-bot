@@ -69,7 +69,7 @@ export default async () => {
       const player = bot.audio.players[guildId.toString()];
 
       player.setBroadcastChannel(channelId);
-      player.setFilters({
+      player.stream.setFilters({
         pitch: pitchValue,
       });
 

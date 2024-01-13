@@ -45,7 +45,7 @@ export default async () => {
 
       player.setBroadcastChannel(channelId);
       await player.joinChannel(bot, userChannelId);
-      const audioSource = await player.queueTrack(
+      const audioSource = await player.stream.queueTrack(
         query,
         interaction.channelId,
         interaction.user.id

@@ -55,7 +55,7 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
-      const currentTrack = player.getCurrentTrack();
+      const currentTrack = player.stream.getCurrentTrack();
 
       if (!currentTrack) return "There is no track playing at the moment.";
 
@@ -72,7 +72,7 @@ export default async () => {
         return `You cannot seek beyond ${parsedDuration.hoursPadded}:${parsedDuration.minutesPadded}:${parsedDuration.secondsPadded} on this track.`;
 
       player.setBroadcastChannel(channelId);
-      player.seek(secondsTotal);
+      player.stream.seek(secondsTotal);
 
       const parsedSecondsTotal = parseTime(secondsTotal);
 

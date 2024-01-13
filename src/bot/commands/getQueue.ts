@@ -17,11 +17,11 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
-      if (!player.getCurrentTrack())
+      if (!player.stream.getCurrentTrack())
         return "There is no track playing at the moment.";
 
       player.setBroadcastChannel(channelId);
-      const queue = player.getQueue().slice(0, 10);
+      const queue = player.stream.getQueue().slice(0, 10);
 
       const fields = queue.map(({ sourceDetails }) => ({
         name: sourceDetails.title,

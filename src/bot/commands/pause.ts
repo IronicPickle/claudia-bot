@@ -15,13 +15,14 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
-      if (!player.getCurrentTrack())
+      if (!player.stream.getCurrentTrack())
         return "There is no track playing at the moment.";
 
-      if (player.getIsPaused()) return "The current track is already paused.";
+      if (player.stream.getIsPaused())
+        return "The current track is already paused.";
 
       player.setBroadcastChannel(channelId);
-      player.pauseTrack();
+      player.stream.pauseTrack();
 
       return "I've told the audio player to pause the current track.";
     }

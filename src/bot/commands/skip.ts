@@ -15,11 +15,11 @@ export default async () => {
 
       const player = bot.audio.players[guildId.toString()];
 
-      if (!player.getCurrentTrack())
+      if (!player.stream.getCurrentTrack())
         return "There is no track playing at the moment.";
 
       player.setBroadcastChannel(channelId);
-      player.skipTrack();
+      player.stream.skipTrack();
 
       return "I've told the audio player to skip this track.";
     }

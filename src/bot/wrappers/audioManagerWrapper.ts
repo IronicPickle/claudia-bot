@@ -6,6 +6,7 @@ export default <B extends Bot & EventManagerBot>(bot: B) => {
   const wrappedBot = bot as B & AudioBot;
 
   wrappedBot.audio = {
+    streams: {},
     players: {},
   };
 

@@ -27,7 +27,7 @@ export interface AudioPlayerUdpSessionDetails {
   audioCodec: string;
 }
 
-export interface AudioPlayerFilters {
+export interface AudioStreamFilters {
   pitch: number;
   volume: number;
   bass: number;
@@ -83,6 +83,7 @@ export type VoiceWsRes =
 
 export interface AudioBot extends Bot {
   audio: {
+    streams: Record<string, AudioStream>;
     players: Record<string, AudioPlayer>;
   };
 }
