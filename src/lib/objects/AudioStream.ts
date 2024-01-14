@@ -7,7 +7,12 @@ import {
   iterateReader,
   readerFromStreamReader,
 } from "https://deno.land/std@0.152.0/streams/conversion.ts";
-import { CHANNELS, FRAME_SIZE, SAMPLE_RATE } from "../constants/audio.ts";
+import {
+  CHANNELS,
+  EMPTY_FRAME_BUFFER,
+  FRAME_SIZE,
+  SAMPLE_RATE,
+} from "../constants/audio.ts";
 import opus from "../../deps/opus.ts";
 
 export enum AudioStreamEvent {
@@ -72,6 +77,7 @@ export default class AudioStream extends EventManager<
   });
 
   private isPaused = false;
+  private emptyFramesPrepared = 0;
 
   private currentTrackStartedAt?: dayjs.Dayjs;
 
@@ -138,8 +144,8 @@ export default class AudioStream extends EventManager<
   }
 
   public async stopTrack() {
+    for (const track of this.queue) await track.destroy();
     this.queue = [];
-    await this.skipTrack();
     await this.clearCurrentTrack();
     this.dispatch(AudioStreamEvent.TrackStop);
   }
@@ -230,6 +236,10 @@ export default class AudioStream extends EventManager<
       console.error(err);
     }
 
+    this.currentIterator = undefined;
+
+    if (!this.queue[0]) return;
+
     this.queue[0].destroy();
 
     this.queue.shift();
@@ -252,7 +262,7 @@ export default class AudioStream extends EventManager<
       console.error(err);
     }
 
-    this.currentIterator = undefined;
+    if (this.currentIterator?.return) await this.currentIterator.return();
     this.ffmpegProcess = undefined;
     this.ffmpegStream = undefined;
 
@@ -275,8 +285,6 @@ export default class AudioStream extends EventManager<
     const { hours, minutes, seconds } = parseTime(startTime);
 
     this.currentTrackStartedAt = dayjs().subtract(startTime, "seconds");
-
-    console.log(currentTrack.sourceFilePath);
 
     try {
       this.ffmpegProcess = new Deno.Command("ffmpeg", {
@@ -331,7 +339,16 @@ export default class AudioStream extends EventManager<
 
     const streamPacket = (await this.currentIterator.next()).value;
 
-    if (!streamPacket) return;
+    if (!streamPacket) {
+      if (this.emptyFramesPrepared === EMPTY_FRAME_BUFFER) {
+        this.nextTrack();
+        return;
+      }
+
+      this.emptyFramesPrepared++;
+    } else if (this.emptyFramesPrepared !== 0) {
+      this.emptyFramesPrepared = 0;
+    }
 
     this.dispatch(AudioStreamEvent.PacketPrepare, streamPacket);
   }

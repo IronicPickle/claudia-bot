@@ -1,5 +1,3 @@
-import { Bot } from "../../deps/discordeno.ts";
-
 type Handler = (...args: any[]) => any;
 type HandlerData = {
   id: string;
@@ -26,7 +24,7 @@ export default class EventManager<
     ...args: Parameters<EventHandlers[E]>
   ) {
     for (const { handler } of Object.values(this.events[event] ?? {})) {
-      handler(args);
+      handler(...args);
     }
   }
 

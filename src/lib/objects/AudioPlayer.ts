@@ -70,9 +70,10 @@ export default class AudioPlayer extends EventManager<
   }
 
   private bindEvents() {
-    this.stream.addEventListener(AudioStreamEvent.TrackStart, () =>
-      this.broadcastUpNext()
-    );
+    this.stream.addEventListener(AudioStreamEvent.TrackStart, () => {
+      this.emptyFramesPrepared = 0;
+      this.broadcastUpNext();
+    });
     this.stream.addEventListener(AudioStreamEvent.QueueAdd, (audioSource) =>
       this.broadcastAddedToQueue(audioSource)
     );
@@ -254,13 +255,13 @@ export default class AudioPlayer extends EventManager<
     return this.stream.canDispatch() && this.nextPacket;
   }
 
-  public async preparePacket(streamPacket?: any) {
-    if (!this.udpServerDetails)
-      return console.error("Missing udp server details");
-    if (!this.udpSessionDetails)
-      return console.error("Missing udp session details");
+  public async preparePacket(sourcePacket?: Uint8Array) {
+    if (!this.udpServerDetails || !this.udpSessionDetails) {
+      if (this.isSpeaking) this.isSpeaking = false;
+      return;
+    }
 
-    if (!this.isSpeaking) this.ws.speaking(true);
+    let streamPacket = sourcePacket;
 
     if (!streamPacket) {
       if (this.emptyFramesPrepared < 5) {
@@ -273,11 +274,11 @@ export default class AudioPlayer extends EventManager<
           `Prepared empty packet ${this.emptyFramesPrepared}`
         );
       } else {
-        // return this.nextTrack();
-        // go next track
-
+        if (this.isSpeaking) this.ws.speaking(false);
         return;
       }
+    } else {
+      if (!this.isSpeaking) this.ws.speaking(true);
     }
 
     this.sequence++;
@@ -299,11 +300,6 @@ export default class AudioPlayer extends EventManager<
     const noncePacket = new Uint8Array(24);
     noncePacket.set(headerPacket, 0);
 
-    console.log(
-      { streamPacket, noncePacket },
-      this.udpSessionDetails.secretKey
-    );
-
     const encryptedChunk = sodium.crypto_secretbox_easy(
       streamPacket,
       noncePacket,
@@ -317,20 +313,14 @@ export default class AudioPlayer extends EventManager<
     audioPacket.set(headerPacket, 0);
     audioPacket.set(encryptedChunk, 12);
 
-    console.log("post prepare", audioPacket);
-
     this.nextPacket = audioPacket;
   }
 
   public async dispatchPacket() {
-    console.log("dispatch", this.nextPacket);
-
-    if (!this.udpSocket) return console.error("Missing udp socket");
-    if (!this.udpServerDetails)
-      return console.error("Missing udp server details");
-    if (!this.udpSessionDetails)
-      return console.error("Missing udp session details");
-    if (!this.nextPacket) return console.error("Missing next packet");
+    if (!this.udpSocket) return;
+    if (!this.udpServerDetails) return;
+    if (!this.udpSessionDetails) return;
+    if (!this.nextPacket) return;
 
     try {
       this.udpSocket.send(this.nextPacket, {

@@ -5,6 +5,7 @@ export const FRAME_LENGTH = 20;
 export const FPS = 1000 / FRAME_LENGTH; // Frames per second
 export const CHANNELS = 2;
 export const FRAME_SIZE = SAMPLE_RATE / FPS; // Samples per frame
+export const EMPTY_FRAME_BUFFER = 5;
 
 export const audioSourcePitchValues = {
   [AudioSourceFilterStep.High3]: 1.45,
