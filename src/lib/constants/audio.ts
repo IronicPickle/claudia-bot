@@ -1,8 +1,8 @@
 import { AudioSourceFilterStep } from "../enums/audio.ts";
 
-export const SAMPLE_RATE = 48000;
-export const FRAME_LENGTH = 20;
-export const FPS = 1000 / FRAME_LENGTH; // Frames per second
+export const SAMPLE_RATE = 48000; // Cycles per second
+export const FRAME_DURATION = 20; // Milliseconds
+export const FPS = 1000 / FRAME_DURATION; // Frames per second
 export const CHANNELS = 2;
 export const FRAME_SIZE = SAMPLE_RATE / FPS; // Samples per frame
 export const EMPTY_FRAME_BUFFER = 5;

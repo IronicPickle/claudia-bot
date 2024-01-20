@@ -1,4 +1,4 @@
-import { FRAME_LENGTH } from "../../lib/constants/audio.ts";
+import { FRAME_DURATION } from "../../lib/constants/audio.ts";
 import AudioPlayer from "../../lib/objects/AudioPlayer.ts";
 import AudioStream from "../../lib/objects/AudioStream.ts";
 import { bot } from "../setupBot.ts";
@@ -70,7 +70,7 @@ export default () => {
   let nextTime = Date.now();
 
   const dispatchPackets = () => {
-    nextTime += FRAME_LENGTH;
+    nextTime += FRAME_DURATION;
 
     const streams = Object.values(bot.audio.streams);
 

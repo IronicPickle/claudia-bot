@@ -49,7 +49,7 @@ interface Events {
   [AudioStreamEvent.FilterChange]: () => void;
   [AudioStreamEvent.FilterReset]: () => void;
 
-  [AudioStreamEvent.PacketPrepare]: (packet: any) => void;
+  [AudioStreamEvent.PacketPrepare]: (packet: Uint8Array) => void;
   [AudioStreamEvent.PacketDispatch]: () => void;
 }
 
@@ -66,15 +66,15 @@ export default class AudioStream extends EventManager<
 > {
   private queue: AudioSource[] = [];
 
-  private ffmpegProcess?: Deno.ChildProcess;
-  private ffmpegStream?: ReadableStreamDefaultReader<Uint8Array>;
-  private currentIterator?: AudioAsyncIterator;
-
   private opusEncoder = new opus.Encoder({
     sample_rate: SAMPLE_RATE,
     channels: CHANNELS,
     application: "audio",
   });
+
+  private ffmpegProcess?: Deno.ChildProcess;
+  private ffmpegStream?: ReadableStreamDefaultReader<Uint8Array>;
+  private currentIterator?: AudioAsyncIterator;
 
   private isPaused = false;
   private emptyFramesPrepared = 0;
@@ -100,13 +100,37 @@ export default class AudioStream extends EventManager<
     return dayjs().diff(this.currentTrackStartedAt, "seconds");
   }
 
+  private async drainCurrentIterator() {
+    if (this.currentIterator?.return) await this.currentIterator.return();
+  }
+
+  private async resetCurrentIterator() {
+    this.currentIterator = undefined;
+  }
+
+  private async killCurrentProcess() {
+    try {
+      await this.ffmpegStream?.cancel();
+      await this.ffmpegProcess?.status;
+    } catch (err) {
+      console.error(err);
+    }
+
+    this.ffmpegProcess = undefined;
+    this.ffmpegStream = undefined;
+  }
+
+  private async drainQueue() {
+    for (const track of this.queue) await track.destroy();
+    this.queue = [];
+  }
+
   private async reencodeCurrentTrack(
     seconds: number | undefined = this.getCurrentTrackTime()
   ) {
     if (seconds == null) return;
 
-    await this.skipTrack();
-    this.prepareTrack(seconds);
+    await this.prepareTrack(seconds);
   }
 
   public playFile(filePath: string) {
@@ -115,7 +139,7 @@ export default class AudioStream extends EventManager<
     if (!audioSource) return null;
 
     this.queue.unshift(audioSource);
-    AudioStream.log(null, "Playing");
+    AudioStream.log("Playing");
     if (!this.currentIterator) this.prepareTrack();
     if (this.isPaused) this.resumeTrack();
   }
@@ -134,7 +158,7 @@ export default class AudioStream extends EventManager<
     if (!audioSource) return null;
 
     this.queue.push(audioSource);
-    AudioStream.log(null, "Queueing");
+    AudioStream.log("Queueing");
     if (!this.currentIterator) this.prepareTrack();
     if (this.isPaused) this.resumeTrack();
 
@@ -144,9 +168,9 @@ export default class AudioStream extends EventManager<
   }
 
   public async stopTrack() {
-    for (const track of this.queue) await track.destroy();
-    this.queue = [];
-    await this.clearCurrentTrack();
+    await this.drainQueue();
+    await this.drainCurrentIterator();
+    await this.killCurrentProcess();
     this.dispatch(AudioStreamEvent.TrackStop);
   }
 
@@ -170,7 +194,7 @@ export default class AudioStream extends EventManager<
   }
 
   public async skipTrack() {
-    if (this.currentIterator?.return) await this.currentIterator.return();
+    this.drainCurrentIterator();
     this.dispatch(AudioStreamEvent.QueueSkip);
   }
 
@@ -229,14 +253,9 @@ export default class AudioStream extends EventManager<
   private async nextTrack() {
     this.dispatch(AudioStreamEvent.TrackNext);
 
-    try {
-      await this.ffmpegStream?.cancel();
-      await this.ffmpegProcess?.status;
-    } catch (err) {
-      console.error(err);
-    }
+    await this.killCurrentProcess();
 
-    this.currentIterator = undefined;
+    this.resetCurrentIterator();
 
     if (!this.queue[0]) return;
 
@@ -254,31 +273,14 @@ export default class AudioStream extends EventManager<
     return !this.isPaused && !!this.currentIterator;
   }
 
-  private async clearCurrentTrack() {
-    try {
-      await this.ffmpegStream?.cancel();
-      await this.ffmpegProcess?.status;
-    } catch (err) {
-      console.error(err);
-    }
-
-    if (this.currentIterator?.return) await this.currentIterator.return();
-    this.ffmpegProcess = undefined;
-    this.ffmpegStream = undefined;
-
-    this.currentTrackStartedAt = undefined;
-  }
-
   private async prepareTrack(startTime = 0) {
-    await this.clearCurrentTrack();
+    this.killCurrentProcess();
 
     const currentTrack = this.getCurrentTrack();
     if (!currentTrack) return;
 
-    AudioStream.log(null, "Waiting for download to finish");
+    AudioStream.log("Waiting for download to finish");
     await currentTrack.downloadProcess?.output();
-
-    if (this.currentIterator) return;
 
     if (startTime === 0) this.dispatch(AudioStreamEvent.TrackStart);
 
