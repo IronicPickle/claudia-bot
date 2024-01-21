@@ -1,20 +1,23 @@
 import { httpMethodColors } from "../../../claudia-shared/lib/constants/generic.ts";
 import { ConsoleColor } from "../../../claudia-shared/lib/enums/generic.ts";
+import { bot } from "../bot/setupBot.ts";
 import config from "../config/config.ts";
 import { Application, Router } from "../deps/oak.ts";
+import { AudioStreamEvent } from "../lib/objects/AudioStream.ts";
 import { decodeJwt } from "../lib/utils/api.ts";
 import { log } from "../lib/utils/generic.ts";
 
-import internalEventStartup from "./internal/events/startup.ts";
-
-interface State {
+export interface State {
   userId?: "internal" | string;
 }
+
+export const createRoute = (callback: (router: Router<State>) => void) =>
+  callback;
 
 export const app = new Application<State>();
 export const router = new Router<State>();
 
-export default () => {
+export default async () => {
   app.use(async ({ request }, next) => {
     log(
       ConsoleColor.Green,
@@ -42,7 +45,62 @@ export default () => {
     await next();
   });
 
-  internalEventStartup();
+  router.get("/test", async (ctx) => {
+    ctx.response.headers.append(
+      "Access-Control-Allow-Origin",
+      "http://localhost:5173"
+    );
+
+    try {
+      ctx.response.type = "audio/opus;codecs=opus";
+      ctx.response.status = 200;
+
+      const stream = bot.audio.streams["585619492608933888"];
+
+      // const ffmpegProcess = new Deno.Command("ffmpeg", {
+      //   args: [
+      //     "-f",
+      //     "s16le",
+
+      //     "-ac",
+      //     CHANNELS.toString(),
+      //     "-ar",
+      //     SAMPLE_RATE.toString(),
+
+      //     "-i",
+      //     "pipe:0",
+
+      //     "-b:a",
+      //     "128k",
+
+      //     "-f",
+      //     "webm",
+
+      //     "pipe:1",
+      //   ],
+      //   stdin: "piped",
+      //   stdout: "piped",
+      // }).spawn();
+
+      const opusIterator = (async function* () {
+        while (true) {
+          const streamPacket = await new Promise((resolve) => {
+            stream.once(AudioStreamEvent.PacketPrepare, (streamPacket) => {
+              resolve(streamPacket);
+            });
+          });
+
+          yield streamPacket;
+        }
+      })();
+
+      ctx.response.body = opusIterator;
+    } catch (err: any) {
+      console.error(err);
+    }
+  });
+
+  await import("./routes.ts");
 
   app.use(router.routes());
   app.use(router.allowedMethods());
