@@ -11,8 +11,9 @@ export interface State {
   userId?: "internal" | string;
 }
 
-export const createRoute = (callback: (router: Router<State>) => void) =>
-  callback;
+export const createRoute = (callback: (router: Router<State>) => void) => ({
+  register: callback,
+});
 
 export const app = new Application<State>();
 export const router = new Router<State>();

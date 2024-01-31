@@ -52,8 +52,13 @@ export const api = ky.create({
   },
 });
 
+export interface ApiCallRes<R> {
+  error: ApiError<keyof R> | undefined;
+  data: R | undefined;
+}
+
 export const apiCall = async <R>(func: () => Promise<R>) => {
-  const res: { error: ApiError<keyof R> | undefined; data: R | undefined } = {
+  const res: ApiCallRes<R> = {
     data: undefined,
     error: undefined,
   };

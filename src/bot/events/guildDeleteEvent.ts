@@ -1,4 +1,4 @@
-import guildUpdate from "../../api/internal/discord/guilds/guildUpdate.ts";
+import Endpoints from "../../api/Endpoints.ts";
 import { Guild } from "../../deps/discordeno.ts";
 import { log } from "../../lib/utils/generic.ts";
 import { GuildConfig } from "../managers/BotConfigManager.ts";
@@ -37,14 +37,15 @@ const updateGuild = async (guild: Guild, guildConfig: GuildConfig) => {
 };
 
 const update = async (guild: Guild) => {
-  const { error: upsertError } = await guildUpdate({
-    params: {
-      guildId: guild.id.toString(),
-    },
-    body: {
-      active: false,
-    },
-  });
+  const { error: upsertError } =
+    await Endpoints.internal.discord.guilds.update.call({
+      params: {
+        guildId: guild.id.toString(),
+      },
+      body: {
+        active: false,
+      },
+    });
 
   if (upsertError) log(upsertError);
 };

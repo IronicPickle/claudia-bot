@@ -5,6 +5,6 @@ import startup from "./startup.ts";
 
 const eventsRouter = new Router<State>();
 
-startup(eventsRouter);
+startup.register(eventsRouter);
 
 export default eventsRouter;

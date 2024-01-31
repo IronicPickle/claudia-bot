@@ -1,4 +1,4 @@
-import guildMemberUpsert from "../../api/internal/discord/guilds/members/guildMemberUpsert.ts";
+import Endpoints from "../../api/Endpoints.ts";
 import { Member } from "../../deps/discordeno.ts";
 import DbTransformer from "../../lib/objects/DbTransformer.ts";
 import { log } from "../../lib/utils/generic.ts";
@@ -28,13 +28,14 @@ const updateMember = async (member: Member) => {
 const upsert = async (member: Member) => {
   const { guildId, memberId, ...body } = DbTransformer.member(member, true);
 
-  const { error: upsertError } = await guildMemberUpsert({
-    params: {
-      guildId,
-      memberId,
-    },
-    body,
-  });
+  const { error: upsertError } =
+    await Endpoints.internal.discord.guilds.members.upsert.call({
+      params: {
+        guildId,
+        memberId,
+      },
+      body,
+    });
 
   if (upsertError) log(upsertError);
 };

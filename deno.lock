@@ -2,11 +2,16 @@
   "version": "3",
   "packages": {
     "specifiers": {
+      "npm:@types/node": "npm:@types/node@18.16.19",
       "npm:dayjs@1.11.7": "npm:dayjs@1.11.7",
       "npm:driftless": "npm:driftless@2.0.3",
       "npm:driftless@2.0.3": "npm:driftless@2.0.3"
     },
     "npm": {
+      "@types/node@18.16.19": {
+        "integrity": "sha512-IXl7o+R9iti9eBW4Wg2hx1xQDig183jj7YLn8F7udNceyfkbn1ZxmzZXuak20gR40D7pIkIY1kYGx5VIGbaHKA==",
+        "dependencies": {}
+      },
       "dayjs@1.11.7": {
         "integrity": "sha512-+Yw9U6YO5TQohxLcIkrXBeY73WP3ejHWVvx8XCk3gxvQDCTEmS48ZrSZCKciI7Bhl/uCMyxYtE9UqRILmFphkQ==",
         "dependencies": {}

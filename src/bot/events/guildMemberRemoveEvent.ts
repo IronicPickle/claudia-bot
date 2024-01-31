@@ -1,4 +1,4 @@
-import guildMemberUpdate from "../../api/internal/discord/guilds/members/guildMemberUpdate.ts";
+import Endpoints from "../../api/Endpoints.ts";
 import { Member } from "../../deps/discordeno.ts";
 import { log } from "../../lib/utils/generic.ts";
 import { bot } from "../setupBot.ts";
@@ -38,15 +38,16 @@ const updateMember = async (member: Member) => {
 };
 
 const update = async (member: Member) => {
-  const { error: upsertError } = await guildMemberUpdate({
-    params: {
-      guildId: member.guildId.toString(),
-      memberId: member.id.toString(),
-    },
-    body: {
-      active: false,
-    },
-  });
+  const { error: upsertError } =
+    await Endpoints.internal.discord.guilds.members.update.call({
+      params: {
+        guildId: member.guildId.toString(),
+        memberId: member.id.toString(),
+      },
+      body: {
+        active: false,
+      },
+    });
 
   if (upsertError) log(upsertError);
 };

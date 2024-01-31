@@ -1,4 +1,4 @@
-import guildsSync from "./api/internal/discord/guilds/guildsSync.ts";
+import Endpoints from "./api/Endpoints.ts";
 import { log, logError } from "./lib/utils/generic.ts";
 import { bot } from "./bot/setupBot.ts";
 import { sleep } from "../../claudia-shared/lib/utils/generic.ts";
@@ -91,7 +91,7 @@ const runGuildsSync = async () => {
   bot.configManager.setConfig(botConfig);
   bot.configManager.writeConfig();
 
-  const { error } = await guildsSync({
+  const { error } = await Endpoints.internal.discord.guilds.sync.call({
     body: {
       guilds,
     },
