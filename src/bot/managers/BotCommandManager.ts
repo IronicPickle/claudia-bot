@@ -1,5 +1,5 @@
-import { isString } from "../../../../claudia-shared/lib/utils/generic.ts";
-import { path } from "../../deps/deps.ts";
+import { isString } from "@shared/lib/utils/generic.ts";
+import { join } from "path";
 import {
   Bot,
   CreateApplicationCommand,
@@ -8,10 +8,10 @@ import {
   InteractionResponse,
   InteractionResponseTypes,
   InteractionTypes,
-} from "../../deps/discordeno.ts";
-import { dataDir } from "../../lib/constants/generic.ts";
-import { EventManagerBot } from "../../lib/ts/eventManagerBot.ts";
-import { log } from "../../lib/utils/generic.ts";
+} from "discordeno";
+import { dataDir } from "@constants/generic.ts";
+import { EventManagerBot } from "@ts/eventManagerBot.ts";
+import { log } from "@utils/generic.ts";
 
 const isEventManagerBot = (bot: any): bot is Bot & EventManagerBot =>
   !!bot.eventManager;
@@ -26,7 +26,7 @@ interface Command {
 export default class BotCommandManager {
   private bot: Bot;
 
-  private commandsPath = path.join(dataDir, "commands.json");
+  private commandsPath = join(dataDir, "commands.json");
   private commands: Command[] = [];
 
   constructor(bot: Bot) {

@@ -1,12 +1,12 @@
-import Validator from "../../../../claudia-shared/lib/objects/Validator.ts";
+import Validator from "@shared/lib/objects/Validator.ts";
 import {
   ApiCallRes,
   RequestDetails,
   RequestInputs,
   RequestResponse,
   ValidatorInputs,
-} from "../../../../claudia-shared/lib/ts/api/generic.ts";
-import { apiCall } from "../../api/api.ts";
+} from "@shared/lib/ts/api/generic.ts";
+import { apiCall } from "@api/api.ts";
 
 type InputCall<RD extends RequestDetails> = (
   requestInputs: RequestInputs<RD>

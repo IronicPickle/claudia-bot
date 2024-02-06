@@ -1,4 +1,4 @@
-import { Bot, Member } from "../../deps/discordeno.ts";
+import { Bot, Member } from "discordeno";
 
 export const getAllMembers = async (bot: Bot, guildId: bigint) => {
   const members: Member[] = [];

@@ -1,6 +1,6 @@
-import { path } from "../../deps/deps.ts";
-import { dataDir } from "../../lib/constants/generic.ts";
-import { log } from "../../lib/utils/generic.ts";
+import { join } from "path";
+import { dataDir } from "@constants/generic.ts";
+import { log } from "@utils/generic.ts";
 
 export interface GuildConfig {
   active: boolean;
@@ -19,7 +19,7 @@ const defaultGuildConfig: GuildConfig = {
 };
 
 export default class BotConfigManager {
-  private configPath = path.join(dataDir, "config.json");
+  private configPath = join(dataDir, "config.json");
   private config: BotConfig = defaultBotConfig;
 
   constructor() {

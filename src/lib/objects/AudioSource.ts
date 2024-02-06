@@ -1,20 +1,20 @@
-import { path } from "../../deps/deps.ts";
+import { join } from "path";
 import {
   scIdRegex,
   spotIdRegex,
   tmpDirPath,
   ytIdRegex,
-} from "../constants/generic.ts";
-import { AudioSourceType } from "../enums/audio.ts";
+} from "@constants/generic.ts";
+import { AudioSourceType } from "@enums/audio.ts";
 import {
   AudioSourceDetails,
   SoundCloudMetadata,
   SpotifyMetadata,
   YoutubeMetadata,
-} from "../ts/audio.ts";
-import AudioPlayer from "./AudioPlayer.ts";
+} from "@ts/audio.ts";
+import AudioPlayer from "@objects/AudioPlayer.ts";
 
-const tmpAudioDirPath = path.join(tmpDirPath, "audio");
+const tmpAudioDirPath = join(tmpDirPath, "audio");
 
 const textDecoder = new TextDecoder();
 
@@ -188,10 +188,7 @@ export default class AudioSource {
   }
 
   private static getYtSource(id: string) {
-    const sourceFilePath = path.join(
-      tmpAudioDirPath,
-      `${crypto.randomUUID()}.webm`
-    );
+    const sourceFilePath = join(tmpAudioDirPath, `${crypto.randomUUID()}.webm`);
 
     const url = `https://www.youtube.com/watch?v=${id}`;
 
@@ -217,7 +214,7 @@ export default class AudioSource {
   private static getSpotSource(id: string) {
     const format = "mp3";
 
-    const sourceFilePath = path.join(
+    const sourceFilePath = join(
       tmpAudioDirPath,
       `${crypto.randomUUID()}.{output-ext}`
     );
@@ -248,7 +245,7 @@ export default class AudioSource {
 
     const fileName = crypto.randomUUID();
 
-    const sourceFilePath = path.join(tmpAudioDirPath, fileName);
+    const sourceFilePath = join(tmpAudioDirPath, fileName);
 
     const url = `https://soundcloud.com/${id}`;
 
@@ -280,10 +277,7 @@ export default class AudioSource {
   }
 
   private static getYtSearchSource(query: string) {
-    const sourceFilePath = path.join(
-      tmpAudioDirPath,
-      `${crypto.randomUUID()}.webm`
-    );
+    const sourceFilePath = join(tmpAudioDirPath, `${crypto.randomUUID()}.webm`);
 
     try {
       const downloadProcess = new Deno.Command("yt-dlp", {

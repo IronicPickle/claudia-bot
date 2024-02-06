@@ -1,6 +1,6 @@
-import config from "../../config/config.ts";
-import dayjs from "../../deps/dayjs.ts";
-import { create, verify } from "../../deps/djwt.ts";
+import config from "@config/config.ts";
+import dayjs from "dayjs";
+import { create, verify } from "djwt";
 
 const jwtKey = await crypto.subtle.importKey(
   "raw",

@@ -1,4 +1,4 @@
-import { Bot, EventHandlers } from "../../deps/discordeno.ts";
+import { Bot, EventHandlers } from "discordeno";
 
 type Handler = (...args: any[]) => any;
 type Event = keyof EventHandlers;

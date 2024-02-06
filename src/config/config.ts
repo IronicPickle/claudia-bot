@@ -1,4 +1,4 @@
-import { ListenOptions } from "../deps/oak.ts";
+import { ListenOptions } from "oak";
 import developmentConfig from "./development.config.ts";
 import productionConfig from "./production.config.ts";
 

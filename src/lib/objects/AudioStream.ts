@@ -1,19 +1,16 @@
-import dayjs from "../../deps/dayjs.ts";
-import { AudioAsyncIterator, AudioStreamFilters } from "../ts/audio.ts";
-import { log, parseTime } from "../utils/generic.ts";
-import AudioSource from "./AudioSource.ts";
-import EventManager from "./EventManager.ts";
-import {
-  iterateReader,
-  readerFromStreamReader,
-} from "https://deno.land/std@0.152.0/streams/conversion.ts";
+import dayjs from "dayjs";
+import { AudioAsyncIterator, AudioStreamFilters } from "@ts/audio.ts";
+import { log, parseTime } from "@utils/generic.ts";
+import AudioSource from "@objects/AudioSource.ts";
+import EventManager from "@objects/EventManager.ts";
+import { iterateReader, readerFromStreamReader } from "streams";
 import {
   CHANNELS,
   EMPTY_FRAME_BUFFER,
   FRAME_SIZE,
   SAMPLE_RATE,
-} from "../constants/audio.ts";
-import opus from "../../deps/opus.ts";
+} from "@constants/audio.ts";
+import { Encoder } from "opus";
 
 export enum AudioStreamEvent {
   TrackStart = "trackStart",
@@ -66,7 +63,7 @@ export default class AudioStream extends EventManager<
 > {
   private queue: AudioSource[] = [];
 
-  private opusEncoder = new opus.Encoder({
+  private opusEncoder = new Encoder({
     sample_rate: SAMPLE_RATE,
     channels: CHANNELS,
     application: "audio",

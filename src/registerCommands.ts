@@ -1,7 +1,7 @@
-import commandsManagerWrapper from "./bot/wrappers/commandsManagerWrapper.ts";
-import config from "./config/config.ts";
-import { Intents, createBot } from "./deps/discordeno.ts";
-import { log } from "./lib/utils/generic.ts";
+import commandsManagerWrapper from "@bot/wrappers/commandsManagerWrapper.ts";
+import config from "@config/config.ts";
+import { Intents, createBot } from "discordeno";
+import { log } from "@utils/generic.ts";
 
 if (!config.discord.token) throw Error("A discord token is required");
 if (!config.discord.botId) throw Error("A bot ID is required");

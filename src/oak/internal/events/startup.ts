@@ -1,7 +1,7 @@
-import { error, ok } from "../../../../../claudia-shared/lib/utils/api.ts";
-import { log, logError } from "../../../../src/lib/utils/generic.ts";
+import { error, ok } from "@shared/lib/utils/api.ts";
+import { log, logError } from "@utils/generic.ts";
 import { attemptGuildSync } from "../../../startupSetup.ts";
-import { createRoute } from "../../setupOak.ts";
+import { createRoute } from "@oak/setupOak.ts";
 
 export default createRoute((router) => {
   router.post("/startup", async (ctx) => {

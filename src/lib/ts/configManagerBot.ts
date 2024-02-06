@@ -1,5 +1,5 @@
-import BotConfigManager from "../../bot/managers/BotConfigManager.ts";
-import { Bot } from "../../deps/discordeno.ts";
+import BotConfigManager from "@bot/managers/BotConfigManager.ts";
+import { Bot } from "discordeno";
 
 export interface ConfigManagerBot extends Bot {
   configManager: BotConfigManager;

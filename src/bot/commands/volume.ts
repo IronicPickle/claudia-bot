@@ -1,7 +1,7 @@
-import { ApplicationCommandOptionTypes } from "../../deps/discordeno.ts";
-import { defaultFilters } from "../../lib/objects/AudioStream.ts";
-import { parseCommandOptions } from "../../lib/utils/generic.ts";
-import { bot } from "../setupBot.ts";
+import { ApplicationCommandOptionTypes } from "discordeno";
+import { defaultFilters } from "@objects/AudioStream.ts";
+import { parseCommandOptions } from "@utils/generic.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(

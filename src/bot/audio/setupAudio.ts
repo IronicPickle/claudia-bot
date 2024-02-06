@@ -1,7 +1,7 @@
-import { FRAME_DURATION } from "../../lib/constants/audio.ts";
-import AudioPlayer from "../../lib/objects/AudioPlayer.ts";
-import AudioStream from "../../lib/objects/AudioStream.ts";
-import { bot } from "../setupBot.ts";
+import { FRAME_DURATION } from "@constants/audio.ts";
+import AudioPlayer from "@objects/AudioPlayer.ts";
+import AudioStream from "@objects/AudioStream.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default () => {
   bot.eventManager.on("guildCreate", (_, { id, voiceStates }) => {

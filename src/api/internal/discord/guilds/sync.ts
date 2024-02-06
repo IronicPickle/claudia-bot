@@ -1,9 +1,9 @@
-import Endpoint from "../../../../lib/objects/Endpoint.ts";
+import Endpoint from "@objects/Endpoint.ts";
 import {
   RequestSpec,
   validator,
-} from "../../../../../../claudia-shared/lib/api/server/internal/discord/guilds/sync.ts";
-import { api } from "../../../api.ts";
+} from "@shared/lib/api/server/internal/discord/guilds/sync.ts";
+import { api } from "@api/api.ts";
 
 export default new Endpoint<RequestSpec>(
   async ({ body }) =>

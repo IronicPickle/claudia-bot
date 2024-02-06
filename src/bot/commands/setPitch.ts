@@ -1,11 +1,11 @@
-import { ApplicationCommandOptionTypes } from "../../deps/discordeno.ts";
+import { ApplicationCommandOptionTypes } from "discordeno";
 import {
   audioSourcePitchNames,
   audioSourcePitchValues,
-} from "../../lib/constants/audio.ts";
-import { AudioSourceFilterStep } from "../../lib/enums/audio.ts";
-import { parseCommandOptions } from "../../lib/utils/generic.ts";
-import { bot } from "../setupBot.ts";
+} from "@constants/audio.ts";
+import { AudioSourceFilterStep } from "@enums/audio.ts";
+import { parseCommandOptions } from "@utils/generic.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(

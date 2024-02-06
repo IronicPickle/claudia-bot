@@ -1,6 +1,6 @@
-import { ApplicationCommandOptionTypes } from "../../deps/discordeno.ts";
-import { parseCommandOptions, parseTime } from "../../lib/utils/generic.ts";
-import { bot } from "../setupBot.ts";
+import { ApplicationCommandOptionTypes } from "discordeno";
+import { parseCommandOptions, parseTime } from "@utils/generic.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(

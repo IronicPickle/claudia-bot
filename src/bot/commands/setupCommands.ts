@@ -1,4 +1,4 @@
-import { bot } from "../setupBot.ts";
+import { bot } from "@bot/setupBot.ts";
 import getTime from "./getTime.ts";
 import listGuildConfig from "./listGuildConfig.ts";
 import play from "./play.ts";

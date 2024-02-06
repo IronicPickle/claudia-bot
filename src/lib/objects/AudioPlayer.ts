@@ -3,8 +3,8 @@ import {
   CreateMessage,
   VoiceCloseEventCodes,
   VoiceOpcodes,
-} from "../../deps/discordeno.ts";
-import sodium from "../../deps/sodium.ts";
+} from "discordeno";
+import sodium from "sodium";
 import {
   AudioBot,
   VoiceWsRes,
@@ -12,15 +12,15 @@ import {
   AudioPlayerWsSessionDetials,
   AudioPlayerUdpServerDetails,
   AudioPlayerUdpSessionDetails,
-} from "../ts/audio.ts";
-import { createUserAt, isUint8Arr, log, parseTime } from "../utils/generic.ts";
-import AudioSource from "./AudioSource.ts";
-import { FRAME_SIZE } from "../constants/audio.ts";
-import { audioSourceTypeNames } from "../constants/generic.ts";
-import { AudioSourceType } from "../enums/audio.ts";
-import dayjs from "../../deps/dayjs.ts";
-import EventManager from "./EventManager.ts";
-import AudioStream, { AudioStreamEvent } from "./AudioStream.ts";
+} from "@ts/audio.ts";
+import { createUserAt, isUint8Arr, log, parseTime } from "@utils/generic.ts";
+import AudioSource from "@objects/AudioSource.ts";
+import { FRAME_SIZE } from "@constants/audio.ts";
+import { audioSourceTypeNames } from "@constants/generic.ts";
+import { AudioSourceType } from "@enums/audio.ts";
+import dayjs from "dayjs";
+import EventManager from "@objects/EventManager.ts";
+import AudioStream, { AudioStreamEvent } from "@objects/AudioStream.ts";
 
 export default class AudioPlayer extends EventManager<
   "userJoin" | "userLeave",

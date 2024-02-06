@@ -1,14 +1,11 @@
-import config from "../../config/config.ts";
-import { path } from "../../deps/deps.ts";
-import { AudioSourceType } from "../enums/audio.ts";
+import config from "@config/config.ts";
+import { join, dirname, fromFileUrl } from "path";
+import { AudioSourceType } from "@enums/audio.ts";
 
-export const srcDir = path.join(
-  path.dirname(path.fromFileUrl(import.meta.url)),
-  "../../"
-);
-export const dataDir = path.join(srcDir, config.dataDir);
-export const benDir = path.join(srcDir, "ben");
-export const tmpDirPath = path.join(dataDir, "tmp");
+export const srcDir = join(dirname(fromFileUrl(import.meta.url)), "../../");
+export const dataDir = join(srcDir, config.dataDir);
+export const benDir = join(srcDir, "ben");
+export const tmpDirPath = join(dataDir, "tmp");
 
 // Id lands in index [3]
 export const ytIdRegex =

@@ -1,6 +1,6 @@
-import { ApplicationCommandOptionTypes } from "../../deps/discordeno.ts";
-import { bot } from "../setupBot.ts";
-import { parseCommandOptions } from "../../lib/utils/generic.ts";
+import { ApplicationCommandOptionTypes } from "discordeno";
+import { bot } from "@bot/setupBot.ts";
+import { parseCommandOptions } from "@utils/generic.ts";
 
 let nicknamingInProgress = false;
 

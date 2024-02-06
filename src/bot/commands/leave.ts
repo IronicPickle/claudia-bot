@@ -1,4 +1,4 @@
-import { bot } from "../setupBot.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(

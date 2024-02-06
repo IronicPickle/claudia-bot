@@ -1,4 +1,4 @@
-import { Bot, Guild, Member } from "../../deps/discordeno.ts";
+import { Bot, Guild, Member } from "discordeno";
 
 export interface CacheGuild extends Guild {
   members: Record<string, Member>;

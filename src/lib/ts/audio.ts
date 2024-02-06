@@ -1,7 +1,7 @@
-import { Bot, VoiceOpcodes } from "../../deps/discordeno.ts";
-import { AudioSourceType } from "../enums/audio.ts";
-import AudioPlayer from "../objects/AudioPlayer.ts";
-import AudioStream from "../objects/AudioStream.ts";
+import { Bot, VoiceOpcodes } from "discordeno";
+import { AudioSourceType } from "@enums/audio.ts";
+import AudioPlayer from "@objects/AudioPlayer.ts";
+import AudioStream from "@objects/AudioStream.ts";
 
 export interface AudioPlayerWsServerDetails {
   token: string;

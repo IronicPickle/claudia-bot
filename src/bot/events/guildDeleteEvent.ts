@@ -1,8 +1,8 @@
-import Endpoints from "../../api/Endpoints.ts";
-import { Guild } from "../../deps/discordeno.ts";
-import { log } from "../../lib/utils/generic.ts";
-import { GuildConfig } from "../managers/BotConfigManager.ts";
-import { bot } from "../setupBot.ts";
+import Endpoints from "@api/Endpoints.ts";
+import { Guild } from "discordeno";
+import { log } from "@utils/generic.ts";
+import { GuildConfig } from "@bot/managers/BotConfigManager.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildDelete", async (_bot, id) => {

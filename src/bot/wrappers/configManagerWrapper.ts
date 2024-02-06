@@ -1,4 +1,4 @@
-import { Bot } from "../../deps/discordeno.ts";
+import { Bot } from "discordeno";
 import { ConfigManagerBot } from "../../lib/ts/configManagerBot.ts";
 import BotConfigManager from "../managers/BotConfigManager.ts";
 

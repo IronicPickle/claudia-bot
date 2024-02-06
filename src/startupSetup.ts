@@ -1,9 +1,9 @@
-import Endpoints from "./api/Endpoints.ts";
-import { log, logError } from "./lib/utils/generic.ts";
-import { bot } from "./bot/setupBot.ts";
-import { sleep } from "../../claudia-shared/lib/utils/generic.ts";
-import DbTransformer from "./lib/objects/DbTransformer.ts";
-import { DbDiscordGuild } from "../../claudia-shared/lib/api/server/internal/discord/dbSpec.ts";
+import Endpoints from "@api/Endpoints.ts";
+import { log, logError } from "@utils/generic.ts";
+import { bot } from "@bot/setupBot.ts";
+import { sleep } from "@shared/lib/utils/generic.ts";
+import DbTransformer from "@objects/DbTransformer.ts";
+import { DbDiscordGuild } from "@shared/lib/api/server/internal/discord/dbSpec.ts";
 
 export default () => {
   setTimeout(attemptGuildSync, 1000 * 1);

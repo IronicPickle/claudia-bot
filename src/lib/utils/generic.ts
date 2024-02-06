@@ -1,8 +1,8 @@
 import { isUint8Array } from "https://deno.land/std@0.83.0/node/_util/_util_types.ts";
-import { isDev } from "../../config/config.ts";
-import { CommandOption, CommandOptions, CommandValue } from "../ts/generic.ts";
-import { enumContains } from "../../../../claudia-shared/lib/utils/generic.ts";
-import { ConsoleColor } from "../../../../claudia-shared/lib/enums/generic.ts";
+import { isDev } from "@config/config.ts";
+import { CommandOption, CommandOptions, CommandValue } from "@ts/generic.ts";
+import { enumContains } from "@shared/lib/utils/generic.ts";
+import { ConsoleColor } from "@shared/lib/enums/generic.ts";
 
 export const log = (...text: any[]) =>
   console.log(

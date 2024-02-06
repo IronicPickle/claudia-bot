@@ -1,5 +1,5 @@
-import { InteractionResponseTypes } from "../../deps/discordeno.ts";
-import { bot } from "../setupBot.ts";
+import { InteractionResponseTypes } from "discordeno";
+import { bot } from "@bot/setupBot.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(

@@ -1,5 +1,5 @@
-import { Router } from "../../../deps/oak.ts";
-import { State } from "../../setupOak.ts";
+import { Router } from "oak";
+import { State } from "@oak/setupOak.ts";
 
 import startup from "./startup.ts";
 

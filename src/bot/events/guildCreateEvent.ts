@@ -1,10 +1,10 @@
-import Endpoints from "../../api/Endpoints.ts";
-import { Guild, Member } from "../../deps/discordeno.ts";
-import DbTransformer from "../../lib/objects/DbTransformer.ts";
-import { getAllMembers } from "../../lib/utils/bot.ts";
-import { log } from "../../lib/utils/generic.ts";
-import { GuildConfig } from "../managers/BotConfigManager.ts";
-import { bot } from "../setupBot.ts";
+import Endpoints from "@api/Endpoints.ts";
+import { Guild, Member } from "discordeno";
+import DbTransformer from "@objects/DbTransformer.ts";
+import { getAllMembers } from "@utils/bot.ts";
+import { log } from "@utils/generic.ts";
+import { GuildConfig } from "@bot/managers/BotConfigManager.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildCreate", async (_bot, guild) => {

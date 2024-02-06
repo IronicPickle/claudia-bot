@@ -3,8 +3,8 @@ import {
   DbDiscordMember,
   DbDiscordPremiumTypes,
   DbDiscordUser,
-} from "../../../../claudia-shared/lib/api/server/internal/discord/dbSpec.ts";
-import { Guild, Member } from "../../deps/discordeno.ts";
+} from "@shared/lib/api/server/internal/discord/dbSpec.ts";
+import { Guild, Member } from "discordeno";
 
 export default class DbTransformer {
   static guild(

@@ -1,7 +1,7 @@
-import config, { env } from "./config/config.ts";
-import { log } from "./lib/utils/generic.ts";
-import setupBot from "./bot/setupBot.ts";
-import setupOak from "./oak/setupOak.ts";
+import config, { env } from "@config/config.ts";
+import { log } from "@utils/generic.ts";
+import setupBot from "@bot/setupBot.ts";
+import setupOak from "@oak/setupOak.ts";
 
 const start = () => {
   if (!config.authSecret) throw Error("AUTH_SECRET missing in env!");

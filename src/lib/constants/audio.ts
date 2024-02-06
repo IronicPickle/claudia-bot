@@ -1,4 +1,4 @@
-import { AudioSourceFilterStep } from "../enums/audio.ts";
+import { AudioSourceFilterStep } from "@enums/audio.ts";
 
 export const SAMPLE_RATE = 48000; // Cycles per second
 export const FRAME_DURATION = 20; // Milliseconds

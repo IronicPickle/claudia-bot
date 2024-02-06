@@ -1,6 +1,6 @@
-import { Bot } from "../../deps/discordeno.ts";
-import { CommandManagerBot } from "../../lib/ts/commandManagerBot.ts";
-import BotCommandManager from "../managers/BotCommandManager.ts";
+import { Bot } from "discordeno";
+import { CommandManagerBot } from "@ts/commandManagerBot.ts";
+import BotCommandManager from "@bot/managers/BotCommandManager.ts";
 
 export default <B extends Bot>(bot: B) => {
   const wrappedBot = bot as B & CommandManagerBot;

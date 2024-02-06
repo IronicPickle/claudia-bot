@@ -1,11 +1,11 @@
-import { httpMethodColors } from "../../../claudia-shared/lib/constants/generic.ts";
-import { ConsoleColor } from "../../../claudia-shared/lib/enums/generic.ts";
-import { bot } from "../bot/setupBot.ts";
-import config from "../config/config.ts";
-import { Application, Router } from "../deps/oak.ts";
-import { AudioStreamEvent } from "../lib/objects/AudioStream.ts";
-import { decodeJwt } from "../lib/utils/api.ts";
-import { log } from "../lib/utils/generic.ts";
+import { httpMethodColors } from "@shared/lib/constants/generic.ts";
+import { ConsoleColor } from "@shared/lib/enums/generic.ts";
+import { bot } from "@bot/setupBot.ts";
+import config from "@config/config.ts";
+import { Application, Router } from "oak";
+import { AudioStreamEvent } from "@objects/AudioStream.ts";
+import { decodeJwt } from "@utils/api.ts";
+import { log } from "@utils/generic.ts";
 
 export interface State {
   userId?: "internal" | string;

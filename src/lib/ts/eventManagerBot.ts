@@ -1,5 +1,5 @@
-import BotEventManager from "../../bot/managers/BotEventManager.ts";
-import { Bot } from "../../deps/discordeno.ts";
+import BotEventManager from "@bot/managers/BotEventManager.ts";
+import { Bot } from "discordeno";
 
 export interface EventManagerBot extends Bot {
   eventManager: BotEventManager;

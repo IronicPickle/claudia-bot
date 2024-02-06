@@ -1,8 +1,8 @@
-import config from "../config/config.ts";
-import { ApiError } from "../../../claudia-shared/lib/ts/api/generic.ts";
-import { GenericErrorCode } from "../../../claudia-shared/lib/enums/api.ts";
-import ky, { KyResponse } from "../deps/ky.ts";
-import { encodeSessionJwt } from "../lib/utils/api.ts";
+import config from "@config/config.ts";
+import { ApiError } from "@shared/lib/ts/api/generic.ts";
+import { GenericErrorCode } from "@shared/lib/enums/api.ts";
+import ky, { KyResponse } from "ky";
+import { encodeSessionJwt } from "@utils/api.ts";
 
 const isKyError = (
   err: any
