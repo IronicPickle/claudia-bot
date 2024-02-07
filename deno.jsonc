@@ -1,4 +1,10 @@
 {
+  "tasks": {
+    "start": "bash ./start.sh",
+    "dev": "bash ./dev.sh",
+    "init": "bash ./init.sh",
+    "registerCommands": "./scripts/registerCommands.sh"
+  },
   "imports": {
     "dayjs": "npm:dayjs@1.11.7",
     "discordeno": "https://deno.land/x/discordeno@17.0.1/mod.ts",
