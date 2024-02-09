@@ -3,6 +3,7 @@ import { Member } from "discordeno";
 import DbTransformer from "@objects/DbTransformer.ts";
 import { log } from "@utils/generic.ts";
 import { bot } from "@bot/setupBot.ts";
+import { isResError } from "@shared/lib/utils/api.ts";
 
 export default () => {
   bot.eventManager.addEventListener(
@@ -31,14 +32,13 @@ const updateMember = async (member: Member) => {
 const upsert = async (member: Member) => {
   const { guildId, memberId, ...body } = DbTransformer.member(member, true);
 
-  const { error: upsertError } =
-    await Endpoints.internal.discord.guilds.members.upsert.call({
-      params: {
-        guildId,
-        memberId,
-      },
-      body,
-    });
+  const res = await Endpoints.internal.discord.guilds.members.upsert.call({
+    params: {
+      guildId,
+      memberId,
+    },
+    body,
+  });
 
-  if (upsertError) log(upsertError);
+  if (isResError(res)) log(res.error);
 };

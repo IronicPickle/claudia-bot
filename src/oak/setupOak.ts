@@ -6,6 +6,7 @@ import { Application, Router } from "oak";
 import { AudioStreamEvent } from "@objects/AudioStream.ts";
 import { decodeJwt } from "@utils/api.ts";
 import { log } from "@utils/generic.ts";
+import { forbiddenError } from "@shared/lib/utils/api.ts";
 
 export interface State {
   userId?: "internal" | string;
@@ -99,6 +100,17 @@ export default async () => {
     } catch (err: any) {
       console.error(err);
     }
+  });
+
+  app.use(async (ctx, next) => {
+    if (
+      ctx.request.url.pathname.startsWith("/internal") &&
+      ctx.state.userId !== "internal"
+    ) {
+      return forbiddenError()(ctx);
+    }
+
+    await next();
   });
 
   await import("./routes.ts");

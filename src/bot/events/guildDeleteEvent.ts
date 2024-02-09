@@ -3,6 +3,7 @@ import { Guild } from "discordeno";
 import { log } from "@utils/generic.ts";
 import { GuildConfig } from "@bot/managers/BotConfigManager.ts";
 import { bot } from "@bot/setupBot.ts";
+import { isResError } from "@shared/lib/utils/api.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildDelete", async (_bot, id) => {
@@ -37,15 +38,14 @@ const updateGuild = async (guild: Guild, guildConfig: GuildConfig) => {
 };
 
 const update = async (guild: Guild) => {
-  const { error: upsertError } =
-    await Endpoints.internal.discord.guilds.update.call({
-      params: {
-        guildId: guild.id.toString(),
-      },
-      body: {
-        active: false,
-      },
-    });
+  const res = await Endpoints.internal.discord.guilds.update.call({
+    params: {
+      guildId: guild.id.toString(),
+    },
+    body: {
+      active: false,
+    },
+  });
 
-  if (upsertError) log(upsertError);
+  if (isResError(res)) log(res.error);
 };

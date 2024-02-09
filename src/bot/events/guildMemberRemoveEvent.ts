@@ -2,6 +2,7 @@ import Endpoints from "@api/Endpoints.ts";
 import { Member } from "discordeno";
 import { log } from "@utils/generic.ts";
 import { bot } from "@bot/setupBot.ts";
+import { isResError } from "@shared/lib/utils/api.ts";
 
 export default () => {
   bot.eventManager.addEventListener(
@@ -38,16 +39,15 @@ const updateMember = async (member: Member) => {
 };
 
 const update = async (member: Member) => {
-  const { error: upsertError } =
-    await Endpoints.internal.discord.guilds.members.update.call({
-      params: {
-        guildId: member.guildId.toString(),
-        memberId: member.id.toString(),
-      },
-      body: {
-        active: false,
-      },
-    });
+  const res = await Endpoints.internal.discord.guilds.members.update.call({
+    params: {
+      guildId: member.guildId.toString(),
+      memberId: member.id.toString(),
+    },
+    body: {
+      active: false,
+    },
+  });
 
-  if (upsertError) log(upsertError);
+  if (isResError(res)) log(res.error);
 };

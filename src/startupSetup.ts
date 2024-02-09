@@ -4,6 +4,7 @@ import { bot } from "@bot/setupBot.ts";
 import { sleep } from "@shared/lib/utils/generic.ts";
 import DbTransformer from "@objects/DbTransformer.ts";
 import { DbDiscordGuild } from "@shared/lib/api/server/internal/discord/dbSpec.ts";
+import { isResError } from "@shared/lib/utils/api.ts";
 
 export default () => {
   setTimeout(attemptGuildSync, 1000 * 1);
@@ -91,11 +92,11 @@ const runGuildsSync = async () => {
   bot.configManager.setConfig(botConfig);
   bot.configManager.writeConfig();
 
-  const { error } = await Endpoints.internal.discord.guilds.sync.call({
+  const res = await Endpoints.internal.discord.guilds.sync.call({
     body: {
       guilds,
     },
   });
 
-  if (error) logError(error);
+  if (isResError(res)) logError(res.error);
 };

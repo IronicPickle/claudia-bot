@@ -5,6 +5,7 @@ import { getAllMembers } from "@utils/bot.ts";
 import { log } from "@utils/generic.ts";
 import { GuildConfig } from "@bot/managers/BotConfigManager.ts";
 import { bot } from "@bot/setupBot.ts";
+import { isResError } from "@shared/lib/utils/api.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildUpdate", async (_bot, guild) => {
@@ -45,15 +46,14 @@ const updateGuild = async (
 const upsert = async (guild: Guild, members: Member[]) => {
   const { guildId, ...body } = DbTransformer.guild(guild, members, true);
 
-  const { error: upsertError } =
-    await Endpoints.internal.discord.guilds.upsert.call({
-      params: {
-        guildId,
-      },
-      body,
-    });
+  const res = await Endpoints.internal.discord.guilds.upsert.call({
+    params: {
+      guildId,
+    },
+    body,
+  });
 
-  if (upsertError) log(upsertError);
+  if (isResError(res)) log(res.error);
 };
 
 //https://discord.com/oauth2/authorize?client_id=1124008138811646134&permissions=8&scope=bot
