@@ -1,5 +1,11 @@
 import config from "@config/config.ts";
-import { ApiError } from "@shared/lib/ts/api/generic.ts";
+import {
+  ApiCallRes,
+  ApiError,
+  RequestDetails,
+  RequestInputs,
+  RequestResponse,
+} from "@shared/lib/ts/api/generic.ts";
 import { GenericErrorCode } from "@shared/lib/enums/api.ts";
 import ky, { KyResponse } from "ky";
 import { encodeSessionJwt } from "@utils/api.ts";
@@ -52,23 +58,14 @@ export const api = ky.create({
   },
 });
 
-export interface ApiCallRes<R> {
-  error: ApiError<keyof R> | undefined;
-  data: R | undefined;
-}
-
-export const apiCall = async <R>(func: () => Promise<R>) => {
-  const res: ApiCallRes<R> = {
-    data: undefined,
-    error: undefined,
-  };
+export const apiCall = async <RD extends RequestDetails>(
+  func: () => Promise<RequestResponse<RD>>
+): Promise<ApiCallRes<RD>> => {
   try {
     const data = await func();
-    res.data = data;
+    return { data };
   } catch (err: any) {
     const error = await getErrorFromApiErr(err);
-    res.error = error;
+    return { error };
   }
-
-  return res;
 };

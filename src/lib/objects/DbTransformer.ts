@@ -5,6 +5,7 @@ import {
   DbDiscordUser,
 } from "@shared/lib/api/server/internal/discord/dbSpec.ts";
 import { Guild, Member } from "discordeno";
+import { bot } from "@bot/setupBot.ts";
 
 export default class DbTransformer {
   static guild(
@@ -43,7 +44,9 @@ export default class DbTransformer {
           userId: user.id.toString(),
           username: user.username,
           discriminator: user.discriminator,
-          avatar: user.avatar?.toString(),
+          avatar: user.avatar
+            ? bot.utils.iconBigintToHash(user.avatar)
+            : undefined,
           locale: user.locale,
           premiumType: user.premiumType as DbDiscordPremiumTypes | undefined,
         }
@@ -52,7 +55,7 @@ export default class DbTransformer {
     return {
       memberId: id.toString(),
       guildId: guildId.toString(),
-      avatar: avatar?.toString(),
+      avatar: avatar ? bot.utils.iconBigintToHash(avatar) : undefined,
       active,
       joinedAt,
       nick,

@@ -13,7 +13,7 @@ type InputCall<RD extends RequestDetails> = (
 ) => Promise<RequestResponse<RD>>;
 type Call<RD extends RequestDetails> = (
   requestInputs: RequestInputs<RD>
-) => Promise<ApiCallRes<RequestResponse<RD>>>;
+) => Promise<ApiCallRes<RD>>;
 type Validators<RD extends RequestDetails> = (
   inputs: ValidatorInputs<RD>
 ) => Record<keyof ValidatorInputs<RD>, Validator>;
@@ -24,7 +24,7 @@ export default class Endpoint<RD extends RequestDetails> {
 
   constructor(call: InputCall<RD>, getValidators?: Validators<RD>) {
     this.call = async (requestInputs: RequestInputs<RD>) =>
-      apiCall<RequestResponse<RD>>(async () => call(requestInputs));
+      apiCall<RD>(async () => call(requestInputs));
     this.getValidators = getValidators;
   }
 }

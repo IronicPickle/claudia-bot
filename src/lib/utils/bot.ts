@@ -20,6 +20,12 @@ export const getAllMembers = async (bot: Bot, guildId: bigint) => {
     members.push(...membersChunk.array());
   }
 
+  for (const member of members) {
+    if (member.user?.avatar) {
+      break;
+    }
+  }
+
   return members.reduce((acc, member) => {
     acc[member.id.toString()] = member;
     return acc;

@@ -68,5 +68,3 @@ const upsert = async (guild: Guild, members: Member[]) => {
 
   if (isResError(res)) log(res.error);
 };
-
-//https://discord.com/oauth2/authorize?client_id=1124008138811646134&permissions=8&scope=bot
