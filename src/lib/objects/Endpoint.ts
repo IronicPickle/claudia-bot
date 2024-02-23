@@ -23,8 +23,8 @@ export default class Endpoint<RD extends RequestDetails> {
   public getValidators?: Validators<RD>;
 
   constructor(call: InputCall<RD>, getValidators?: Validators<RD>) {
-    this.call = async (requestInputs: RequestInputs<RD>) =>
-      apiCall<RD>(async () => call(requestInputs));
+    this.call = (requestInputs: RequestInputs<RD>) =>
+      apiCall<RD>(() => call(requestInputs));
     this.getValidators = getValidators;
   }
 }

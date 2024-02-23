@@ -3,8 +3,8 @@ import { State } from "@oak/setupOak.ts";
 
 import startup from "./startup.ts";
 
-const eventsRouter = new Router<State>();
+const router = new Router<State>();
 
-startup.register(eventsRouter);
+startup.register(router);
 
-export default eventsRouter;
+export default router;

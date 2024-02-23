@@ -3,8 +3,8 @@ import { State } from "@oak/setupOak.ts";
 
 import eventsRouter from "./events/router.ts";
 
-const internalRouter = new Router<State>();
+const router = new Router<State>();
 
-internalRouter.use("/events", eventsRouter.routes());
+router.use("/events", eventsRouter.routes());
 
-export default internalRouter;
+export default router;
