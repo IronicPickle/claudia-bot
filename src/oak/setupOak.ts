@@ -9,7 +9,7 @@ import { log } from "@utils/generic.ts";
 import { forbiddenError } from "@shared/lib/utils/api.ts";
 
 export interface State {
-  userId?: "internal" | string;
+  sessionUserId?: "internal" | string;
 }
 
 export const createRoute = (callback: (router: Router<State>) => void) => ({
@@ -42,7 +42,7 @@ export default async () => {
     if (jwt) {
       const payload = await decodeJwt(jwt);
 
-      if (payload) state.userId = payload.sub;
+      if (payload) state.sessionUserId = payload.sub;
     }
     await next();
   });
@@ -105,7 +105,7 @@ export default async () => {
   app.use(async (ctx, next) => {
     if (
       ctx.request.url.pathname.startsWith("/internal") &&
-      ctx.state.userId !== "internal"
+      ctx.state.sessionUserId !== "internal"
     ) {
       return forbiddenError()(ctx);
     }
