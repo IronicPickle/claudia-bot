@@ -2,7 +2,6 @@ import dayjs from "dayjs";
 import { AudioAsyncIterator, AudioStreamFilters } from "@ts/audio.ts";
 import { log, parseTime } from "@utils/generic.ts";
 import AudioSource from "@objects/AudioSource.ts";
-import EventManager from "@objects/EventManager.ts";
 import { iterateReader, readerFromStreamReader } from "streams";
 import {
   CHANNELS,
@@ -11,6 +10,7 @@ import {
   SAMPLE_RATE,
 } from "@constants/audio.ts";
 import { Encoder } from "opus";
+import EventManager from "@shared/lib/objects/EventManager.ts";
 
 export enum AudioStreamEvent {
   TrackStart = "trackStart",
@@ -57,10 +57,7 @@ export const defaultFilters: AudioStreamFilters = {
   treble: 0,
 };
 
-export default class AudioStream extends EventManager<
-  AudioStreamEvent,
-  Events
-> {
+export default class AudioStream extends EventManager<Events> {
   private queue: AudioSource[] = [];
 
   private opusEncoder = new Encoder({

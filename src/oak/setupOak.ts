@@ -104,6 +104,7 @@ export default async () => {
 
   app.use(async (ctx, next) => {
     if (
+      ctx.request.url.pathname !== "/internal/audioStream" &&
       ctx.request.url.pathname.startsWith("/internal") &&
       ctx.state.sessionUserId !== "internal"
     ) {

@@ -19,16 +19,13 @@ import { FRAME_SIZE } from "@constants/audio.ts";
 import { audioSourceTypeNames } from "@constants/generic.ts";
 import { AudioSourceType } from "@enums/audio.ts";
 import dayjs from "dayjs";
-import EventManager from "@objects/EventManager.ts";
 import AudioStream, { AudioStreamEvent } from "@objects/AudioStream.ts";
+import EventManager from "@shared/lib/objects/EventManager.ts";
 
-export default class AudioPlayer extends EventManager<
-  "userJoin" | "userLeave",
-  {
-    userJoin: () => void;
-    userLeave: () => void;
-  }
-> {
+export default class AudioPlayer extends EventManager<{
+  userJoin: () => void;
+  userLeave: () => void;
+}> {
   private bot: Bot & AudioBot;
 
   public readonly stream: AudioStream;
