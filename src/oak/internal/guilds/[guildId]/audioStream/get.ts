@@ -1,17 +1,21 @@
-import { error, ok } from "@shared/lib/utils/api.ts";
+import { error, ok, parseParams } from "@shared/lib/utils/api.ts";
 import { logError } from "@utils/generic.ts";
 import { createRoute } from "@oak/setupOak.ts";
 import { GenericErrorCode } from "@shared/lib/enums/api.ts";
 import AudioStreamSocketServer from "@objects/AudioStreamSocketServer.ts";
+import { RequestSpec } from "@shared/lib/api/bot/internal/guilds/[guildId]/audioStream/get.ts";
 
 export default createRoute((router) => {
   router.get("/", async (ctx) => {
-    console.log("audio stream");
+    const params = parseParams<RequestSpec["params"]>(ctx);
+
+    const { guildId } = params;
+
     try {
       if (!ctx.isUpgradable)
         return error("Cannot upgrade.", GenericErrorCode.NotImplemented, 501);
 
-      new AudioStreamSocketServer(ctx.upgrade());
+      new AudioStreamSocketServer(ctx.upgrade(), guildId);
 
       return ok({})(ctx);
     } catch (err: any) {

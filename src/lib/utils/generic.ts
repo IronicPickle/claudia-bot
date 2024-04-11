@@ -20,6 +20,9 @@ export const log = (...text: any[]) =>
 export const logError = (...text: any[]) =>
   isDev && console.error("[Dev]", "[ERROR]", ...text);
 
+export const logWs = (...text: Array<any>) =>
+  log(ConsoleColor.Blue, "[WS]", ConsoleColor.Reset, ...text);
+
 export const isUint8Arr = (value: any): value is Uint8Array =>
   isUint8Array(value);
 
