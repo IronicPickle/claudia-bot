@@ -24,7 +24,7 @@ export default class AudioStreamSocketServer extends SocketServer {
     });
 
     this.guildId = guildId;
-    this.stream = bot.audio.streams["585619492608933888"];
+    this.stream = bot.audio.streams[guildId];
 
     this.addEventListener("authenticated", () => {
       this.startStream();
@@ -62,6 +62,8 @@ export default class AudioStreamSocketServer extends SocketServer {
   }
 
   private startStream() {
+    if (!this.stream) return;
+
     console.log("WS ->", "Stream Started");
 
     this.listenerId = this.stream.on(
@@ -74,6 +76,8 @@ export default class AudioStreamSocketServer extends SocketServer {
 
   private stopStream() {
     if (!this.listenerId) return;
+    if (!this.stream) return;
+
     console.log("WS ->", "Stream Stopped");
     this.stream.off(this.listenerId);
   }
