@@ -4,6 +4,7 @@ import { createRoute } from "@oak/setupOak.ts";
 import { GenericErrorCode } from "@shared/lib/enums/api.ts";
 import AudioStreamSocketServer from "@objects/AudioStreamSocketServer.ts";
 import { RequestSpec } from "@shared/lib/api/bot/internal/guilds/[guildId]/audioStream/get.ts";
+import { bot } from "@bot/setupBot.ts";
 
 export default createRoute((router) => {
   router.get("/", async (ctx) => {
@@ -14,6 +15,9 @@ export default createRoute((router) => {
     try {
       if (!ctx.isUpgradable)
         return error("Cannot upgrade.", GenericErrorCode.NotImplemented, 501);
+
+      if (!bot.audio.streams[guildId])
+        return error("Setup still in progress", GenericErrorCode.TooEarly, 425);
 
       new AudioStreamSocketServer(ctx.upgrade(), guildId);
 

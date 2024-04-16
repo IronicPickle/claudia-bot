@@ -30,6 +30,52 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
     this.guildId = guildId;
     this.stream = bot.audio.streams[guildId];
 
+    this.stream.addEventListener(AudioStreamEvent.TrackStart, () => {
+      this.send(AudioStreamSocketMessageNames.TrackStartEvent);
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.TrackEnd, () => {
+      this.send(AudioStreamSocketMessageNames.TrackEndEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.TrackNext, () => {
+      this.send(AudioStreamSocketMessageNames.TrackNextEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.TrackPause, () => {
+      this.send(AudioStreamSocketMessageNames.TrackPauseEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.TrackResume, () => {
+      this.send(AudioStreamSocketMessageNames.TrackResumeEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.TrackSeek, () => {
+      this.send(AudioStreamSocketMessageNames.TrackSeekEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.TrackStop, () => {
+      this.send(AudioStreamSocketMessageNames.TrackStopEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.QueueAdd, (audioSource) => {
+      this.send(AudioStreamSocketMessageNames.QueueAddEvent, {
+        track: audioSource.sourceDetails,
+      });
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.QueueSkip, () => {
+      this.send(AudioStreamSocketMessageNames.QueueSkipEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.FilterChange, () => {
+      this.send(AudioStreamSocketMessageNames.FilterChangeEvent, {});
+    });
+
+    this.stream.addEventListener(AudioStreamEvent.FilterReset, () => {
+      this.send(AudioStreamSocketMessageNames.FilterResetEvent, {});
+    });
+
     this.addEventListener("message", async ({ name, data }) => {
       if (name.includes("authenticate")) return;
 
@@ -48,7 +94,7 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
           if (!source) return;
           await source.metadataExtractionPromise;
           this.send(AudioStreamSocketMessageNames.PlayRes, {
-            userId: data.userId,
+            socketId: (data as any).socketId,
             success: !!source,
             track: source?.sourceDetails,
           });
@@ -56,10 +102,10 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
         }
 
         case AudioStreamSocketMessageNames.StateReq: {
-          const sources = this.stream?.getQueue();
+          const sources = this.stream.getQueue();
 
           this.send(AudioStreamSocketMessageNames.StateRes, {
-            userId: data.userId,
+            socketId: (data as any).socketId,
             success: !!sources,
             queue: sources?.map((source) => source.sourceDetails),
           });

@@ -156,6 +156,8 @@ export default class AudioStream extends EventManager<Events> {
     if (!this.currentIterator) this.prepareTrack();
     if (this.isPaused) this.resumeTrack();
 
+    await audioSource.metadataExtractionPromise;
+
     this.dispatch(AudioStreamEvent.QueueAdd, audioSource);
 
     return audioSource;
