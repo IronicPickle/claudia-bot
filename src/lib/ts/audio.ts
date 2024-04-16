@@ -1,5 +1,4 @@
 import { Bot, VoiceOpcodes } from "discordeno";
-import { AudioSourceType } from "@enums/audio.ts";
 import AudioPlayer from "@objects/AudioPlayer.ts";
 import AudioStream from "@objects/AudioStream.ts";
 
@@ -92,45 +91,6 @@ export interface AudioBot extends Bot {
 export type AudioAsyncIterator =
   | AsyncGenerator<Uint8Array, void, unknown>
   | AsyncIterableIterator<Uint8Array>;
-
-export interface AudioSourceDetailsShared {
-  id?: string;
-  url?: string;
-  title?: string;
-  artist?: string;
-  album?: string;
-  duration?: number;
-  date?: string;
-}
-
-export interface AudioSourceDetailsYouTube {
-  type: AudioSourceType.YouTube;
-}
-
-export interface AudioSourceDetailsSpotify {
-  type: AudioSourceType.Spotify;
-}
-
-export interface AudioSourceDetailsSoundCloud {
-  type: AudioSourceType.SoundCloud;
-}
-
-export interface AudioSourceDetailsFile {
-  type: AudioSourceType.File;
-}
-
-export interface AudioSourceDetailsUnknown {
-  type: AudioSourceType.Unknown;
-}
-
-export type AudioSourceDetails = (
-  | AudioSourceDetailsYouTube
-  | AudioSourceDetailsSpotify
-  | AudioSourceDetailsSoundCloud
-  | AudioSourceDetailsFile
-  | AudioSourceDetailsUnknown
-) &
-  AudioSourceDetailsShared;
 
 export interface FfprobeMetadata<T extends Record<string, any>> {
   format?: {

@@ -1,11 +1,3 @@
-export enum AudioSourceType {
-  Unknown = "UNKNOWN",
-  File = "FILE",
-  YouTube = "YOUTUBE",
-  Spotify = "SPOTIFY",
-  SoundCloud = "SOUNDCLOUD",
-}
-
 export enum AudioSourceFilterStep {
   High3 = 30,
   High2 = 20,

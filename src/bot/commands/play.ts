@@ -2,12 +2,12 @@ import {
   ApplicationCommandOptionTypes,
   InteractionResponseTypes,
 } from "discordeno";
+import { parseCommandOptions } from "@utils/generic.ts";
+import { bot } from "@bot/setupBot.ts";
 import {
   audioSourceTypeColors,
   audioSourceTypeNames,
-} from "@constants/generic.ts";
-import { parseCommandOptions } from "@utils/generic.ts";
-import { bot } from "@bot/setupBot.ts";
+} from "@shared/lib/constants/audio.ts";
 
 export default async () => {
   await bot.commandManager.saveCommand(

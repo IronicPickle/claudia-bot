@@ -16,11 +16,11 @@ import {
 import { createUserAt, isUint8Arr, log, parseTime } from "@utils/generic.ts";
 import AudioSource from "@objects/AudioSource.ts";
 import { FRAME_SIZE } from "@constants/audio.ts";
-import { audioSourceTypeNames } from "@constants/generic.ts";
-import { AudioSourceType } from "@enums/audio.ts";
 import dayjs from "dayjs";
 import AudioStream, { AudioStreamEvent } from "@objects/AudioStream.ts";
 import EventManager from "@shared/lib/objects/EventManager.ts";
+import { AudioSourceType } from "@shared/lib/enums/audio.ts";
+import { audioSourceTypeNames } from "@shared/lib/constants/audio.ts";
 
 export default class AudioPlayer extends EventManager<{
   userJoin: () => void;

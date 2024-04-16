@@ -5,14 +5,14 @@ import {
   tmpDirPath,
   ytIdRegex,
 } from "@constants/generic.ts";
-import { AudioSourceType } from "@enums/audio.ts";
 import {
-  AudioSourceDetails,
   SoundCloudMetadata,
   SpotifyMetadata,
   YoutubeMetadata,
 } from "@ts/audio.ts";
 import AudioPlayer from "@objects/AudioPlayer.ts";
+import { AudioSourceDetails } from "@shared/lib/ts/audio.ts";
+import { AudioSourceType } from "@shared/lib/enums/audio.ts";
 
 const tmpAudioDirPath = join(tmpDirPath, "audio");
 
