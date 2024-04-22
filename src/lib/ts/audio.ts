@@ -27,13 +27,6 @@ export interface AudioPlayerUdpSessionDetails {
   audioCodec: string;
 }
 
-export interface AudioStreamFilters {
-  pitch: number;
-  volume: number;
-  bass: number;
-  treble: number;
-}
-
 export interface VoiceWsEventData {
   [VoiceOpcodes.Identify]: {};
   [VoiceOpcodes.SelectProtocol]: {};

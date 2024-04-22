@@ -34,10 +34,6 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
       this.send(AudioStreamSocketMessageNames.TrackStartEvent);
     });
 
-    this.stream.addEventListener(AudioStreamEvent.TrackEnd, () => {
-      this.send(AudioStreamSocketMessageNames.TrackEndEvent, {});
-    });
-
     this.stream.addEventListener(AudioStreamEvent.TrackNext, () => {
       this.send(AudioStreamSocketMessageNames.TrackNextEvent, {});
     });
@@ -50,9 +46,14 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
       this.send(AudioStreamSocketMessageNames.TrackResumeEvent, {});
     });
 
-    this.stream.addEventListener(AudioStreamEvent.TrackSeek, () => {
-      this.send(AudioStreamSocketMessageNames.TrackSeekEvent, {});
-    });
+    this.stream.addEventListener(
+      AudioStreamEvent.TrackSeek,
+      (trackPosition) => {
+        this.send(AudioStreamSocketMessageNames.TrackSeekEvent, {
+          trackPosition,
+        });
+      }
+    );
 
     this.stream.addEventListener(AudioStreamEvent.TrackStop, () => {
       this.send(AudioStreamSocketMessageNames.TrackStopEvent, {});
@@ -68,12 +69,12 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
       this.send(AudioStreamSocketMessageNames.QueueSkipEvent, {});
     });
 
-    this.stream.addEventListener(AudioStreamEvent.FilterChange, () => {
-      this.send(AudioStreamSocketMessageNames.FilterChangeEvent, {});
+    this.stream.addEventListener(AudioStreamEvent.FilterChange, (filters) => {
+      this.send(AudioStreamSocketMessageNames.FilterChangeEvent, { filters });
     });
 
-    this.stream.addEventListener(AudioStreamEvent.FilterReset, () => {
-      this.send(AudioStreamSocketMessageNames.FilterResetEvent, {});
+    this.stream.addEventListener(AudioStreamEvent.FilterReset, (filters) => {
+      this.send(AudioStreamSocketMessageNames.FilterResetEvent, { filters });
     });
 
     this.addEventListener("message", async ({ name, data }) => {
@@ -101,13 +102,73 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
           break;
         }
 
+        case AudioStreamSocketMessageNames.SkipReq: {
+          await this.stream.skipTrack();
+          this.send(AudioStreamSocketMessageNames.SkipRes, {
+            socketId: (data as any).socketId,
+            success: true,
+          });
+          break;
+        }
+
+        case AudioStreamSocketMessageNames.StopReq: {
+          await this.stream.stopTrack();
+          this.send(AudioStreamSocketMessageNames.StopRes, {
+            socketId: (data as any).socketId,
+            success: true,
+          });
+          break;
+        }
+
+        case AudioStreamSocketMessageNames.PauseReq: {
+          this.stream.pauseTrack();
+          this.send(AudioStreamSocketMessageNames.PauseRes, {
+            socketId: (data as any).socketId,
+            success: true,
+          });
+          break;
+        }
+
+        case AudioStreamSocketMessageNames.ResumeReq: {
+          this.stream.resumeTrack();
+          this.send(AudioStreamSocketMessageNames.ResumeRes, {
+            socketId: (data as any).socketId,
+            success: true,
+          });
+          break;
+        }
+
+        case AudioStreamSocketMessageNames.SeekReq: {
+          this.stream.seek(data.position);
+          this.send(AudioStreamSocketMessageNames.SeekRes, {
+            socketId: (data as any).socketId,
+            success: true,
+          });
+          break;
+        }
+
+        case AudioStreamSocketMessageNames.SetFiltersReq: {
+          await this.stream.setFilters(data.filters);
+          this.send(AudioStreamSocketMessageNames.SetFiltersRes, {
+            socketId: (data as any).socketId,
+            success: true,
+          });
+          break;
+        }
+
         case AudioStreamSocketMessageNames.StateReq: {
           const sources = this.stream.getQueue();
+          const trackTime = this.stream.getCurrentTrackTime();
+          const filters = this.stream.getFilters();
+          const isPaused = this.stream.getIsPaused();
 
           this.send(AudioStreamSocketMessageNames.StateRes, {
             socketId: (data as any).socketId,
             success: !!sources,
             queue: sources?.map((source) => source.sourceDetails),
+            trackTime,
+            filters,
+            isPaused,
           });
           break;
         }
@@ -130,8 +191,15 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
       this.logEvent(ConsoleColor.Green, "OPEN");
     });
 
-    this.addEventListener("close", () => {
-      this.logEvent(ConsoleColor.Red, "CLOSE");
+    this.addEventListener("close", (code, wasClean) => {
+      this.logEvent(
+        ConsoleColor.Red,
+        "CLOSE",
+        "-",
+        code,
+        "-",
+        wasClean ? "clean" : "unclean"
+      );
     });
   }
 

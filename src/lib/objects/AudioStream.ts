@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { AudioAsyncIterator, AudioStreamFilters } from "@ts/audio.ts";
+import { AudioAsyncIterator } from "@ts/audio.ts";
 import { log, parseTime } from "@utils/generic.ts";
 import AudioSource from "@objects/AudioSource.ts";
 import { iterateReader, readerFromStreamReader } from "streams";
@@ -11,10 +11,10 @@ import {
 } from "@constants/audio.ts";
 import { Encoder } from "opus";
 import EventManager from "@shared/lib/objects/EventManager.ts";
+import { AudioStreamFilters } from "@shared/lib/ts/audio.ts";
 
 export enum AudioStreamEvent {
   TrackStart = "trackStart",
-  TrackEnd = "trackEnd",
   TrackStop = "trackStop",
   TrackPause = "trackPause",
   TrackResume = "trackResume",
@@ -33,18 +33,17 @@ export enum AudioStreamEvent {
 
 interface Events {
   [AudioStreamEvent.TrackStart]: () => void;
-  [AudioStreamEvent.TrackEnd]: () => void;
   [AudioStreamEvent.TrackStop]: () => void;
   [AudioStreamEvent.TrackPause]: () => void;
   [AudioStreamEvent.TrackResume]: () => void;
   [AudioStreamEvent.TrackNext]: () => void;
-  [AudioStreamEvent.TrackSeek]: () => void;
+  [AudioStreamEvent.TrackSeek]: (trackPosition: number) => void;
 
   [AudioStreamEvent.QueueSkip]: () => void;
   [AudioStreamEvent.QueueAdd]: (audioSource: AudioSource) => void;
 
-  [AudioStreamEvent.FilterChange]: () => void;
-  [AudioStreamEvent.FilterReset]: () => void;
+  [AudioStreamEvent.FilterChange]: (filters: AudioStreamFilters) => void;
+  [AudioStreamEvent.FilterReset]: (filters: AudioStreamFilters) => void;
 
   [AudioStreamEvent.PacketPrepare]: (packet: Uint8Array) => void;
   [AudioStreamEvent.PacketDispatch]: () => void;
@@ -92,6 +91,10 @@ export default class AudioStream extends EventManager<Events> {
   public getCurrentTrackTime() {
     if (!this.currentTrackStartedAt) return;
     return dayjs().diff(this.currentTrackStartedAt, "seconds");
+  }
+
+  public getFilters() {
+    return this.filters;
   }
 
   private async drainCurrentIterator() {
@@ -196,7 +199,7 @@ export default class AudioStream extends EventManager<Events> {
 
   public async seek(seconds: number) {
     this.reencodeCurrentTrack(seconds * (2 - this.filters.pitch));
-    this.dispatch(AudioStreamEvent.TrackSeek);
+    this.dispatch(AudioStreamEvent.TrackSeek, seconds);
   }
 
   public async setFilters(filters: Partial<AudioStreamFilters>) {
@@ -237,13 +240,13 @@ export default class AudioStream extends EventManager<Events> {
 
     await this.reencodeCurrentTrack();
 
-    this.dispatch(AudioStreamEvent.FilterChange);
+    this.dispatch(AudioStreamEvent.FilterChange, this.filters);
   }
 
   public async resetFilter() {
     await this.setFilters(defaultFilters);
 
-    this.dispatch(AudioStreamEvent.FilterReset);
+    this.dispatch(AudioStreamEvent.FilterReset, this.filters);
   }
 
   private async nextTrack() {
