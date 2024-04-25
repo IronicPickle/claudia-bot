@@ -78,7 +78,7 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
     });
 
     this.addEventListener("message", async ({ name, data }) => {
-      if (name.includes("authenticate")) return;
+      if (name.includes("authenticate") || name.includes("heartbeat")) return;
 
       this.logEvent(
         ConsoleColor.Magenta,
@@ -185,6 +185,10 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
 
     this.addEventListener("authenticated", () => {
       this.logEvent(ConsoleColor.Yellow, "AUTHENTICATED");
+    });
+
+    this.addEventListener("heartbeat", () => {
+      this.logEvent(ConsoleColor.White, "HEARTBEAT");
     });
 
     this.addEventListener("open", () => {

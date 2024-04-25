@@ -146,6 +146,8 @@ export default class AudioStream extends EventManager<Events> {
     broadcastChannelId?: bigint,
     submitterMemberId?: bigint
   ) {
+    if (!query) return null;
+
     const audioSource = AudioSource.from(
       query,
       broadcastChannelId,
