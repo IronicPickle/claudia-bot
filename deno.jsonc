@@ -3,7 +3,7 @@
     "start": "bash ./start.sh",
     "dev": "bash ./dev.sh",
     "init": "bash ./init.sh",
-    "registerCommands": "./scripts/registerCommands.sh"
+    "registerCommands": "bash ./registerCommands.sh"
   },
   "imports": {
     "dayjs": "npm:dayjs@1.11.7",

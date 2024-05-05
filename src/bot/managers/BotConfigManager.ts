@@ -4,6 +4,8 @@ import { log } from "@utils/generic.ts";
 
 export interface GuildConfig {
   active: boolean;
+
+  defaultBroadcastChannelId?: string;
 }
 
 export interface BotConfig {

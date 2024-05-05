@@ -89,9 +89,20 @@ export default class AudioStreamSocketServer extends SocketServer<AudioStreamSoc
         data
       );
 
+      const userId = BigInt((data as any).userId);
+
+      const botConfig = bot.configManager.getGuildConfig(BigInt(this.guildId));
+
       switch (name) {
         case AudioStreamSocketMessageNames.PlayReq: {
-          const source = await this.stream.queueTrack(data.query);
+          const { defaultBroadcastChannelId } = botConfig ?? {};
+          const source = await this.stream.queueTrack(
+            data.query,
+            defaultBroadcastChannelId
+              ? BigInt(defaultBroadcastChannelId)
+              : undefined,
+            userId
+          );
           if (!source) return;
           await source.metadataExtractionPromise;
           this.send(AudioStreamSocketMessageNames.PlayRes, {

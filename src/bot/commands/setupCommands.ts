@@ -15,6 +15,7 @@ import setTreble from "./setTreble.ts";
 import leave from "./leave.ts";
 import join from "./join.ts";
 import massNickname from "./massNickname.ts";
+import setDefaultBroadcastChannel from "./setDefaultBroadcastChannel.ts";
 
 export default async () => {
   // Affect track
@@ -41,6 +42,8 @@ export default async () => {
   await join();
 
   await massNickname();
+
+  await setDefaultBroadcastChannel();
 
   bot.commandManager.registerListener();
 };
