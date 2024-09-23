@@ -161,9 +161,9 @@ export default class AudioStream extends EventManager<Events> {
     if (!this.currentIterator) this.prepareTrack();
     if (this.isPaused) this.resumeTrack();
 
-    await audioSource.metadataExtractionPromise;
-
-    this.dispatch(AudioStreamEvent.QueueAdd, audioSource);
+    audioSource.metadataExtractionPromise?.then(() =>
+      this.dispatch(AudioStreamEvent.QueueAdd, audioSource)
+    );
 
     return audioSource;
   }
@@ -292,6 +292,10 @@ export default class AudioStream extends EventManager<Events> {
     try {
       this.ffmpegProcess = new Deno.Command("ffmpeg", {
         args: [
+          "-hide_banner",
+          "-loglevel",
+          "error",
+
           "-i",
           currentTrack.sourceFilePath,
 
