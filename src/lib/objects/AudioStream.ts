@@ -309,7 +309,7 @@ export default class AudioStream extends EventManager<Events> {
 
           "-af",
           `asetrate=${SAMPLE_RATE}*${this.filters.pitch},volume=${
-            this.filters.volume / 50
+            this.filters.volume / 200
           },firequalizer=gain_entry='entry(0,${this.filters.bass});entry(250,${
             this.filters.bass / 2
           });entry(1000,0);entry(4000,${this.filters.treble / 2});entry(16000,${
