@@ -47,7 +47,7 @@ printf "\nCreating python virtual environment\n"
 python3 -m venv .venv
 
 if [ ! -e .env ]; then
-  printf "> Generating .env file"
+  printf "Generating .env file"
   echo "DENO_ENV=development" >> .env
   echo "" >> .env
   echo "DISCORD_TOKEN=" >> .env
