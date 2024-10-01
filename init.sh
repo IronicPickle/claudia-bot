@@ -58,4 +58,4 @@ else
   printf ".env already exists, skipping..."
 fi
 
-printf "\n\\e[1m> Initialisation done, \e[33mclaudia Bot\e[0m\e[1m ready\e[0m\n"
+printf "\n\\e[1m> Initialisation done, \e[33mClaudia Bot\e[0m\e[1m ready\e[0m\n"
