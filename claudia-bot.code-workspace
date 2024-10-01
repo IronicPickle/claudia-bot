@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "Discord Bot",
+      "path": "./"
+    },
+    {
+      "name": "Shared",
+      "path": "../claudia-shared"
+    }
+  ],
+  "settings": {}
+}
