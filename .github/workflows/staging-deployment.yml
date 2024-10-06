@@ -50,6 +50,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null home-server@ironicpickle.uk "\
             cd /home/home-server/claudia/claudia-bot
-            rm ./* -rf && \
-            tar -xzf dist.tar.gz && \
+            rm ./dist -rf && \
+            mkdir ./dist && \
+            tar -xzf dist.tar.gz -C ./dist && \
             rm dist.tar.gz"
