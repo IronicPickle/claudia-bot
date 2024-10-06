@@ -32,6 +32,8 @@ jobs:
       - name: Inject env vars
         run: |
           echo DENO_ENV=development > .env
+          echo OAK_PORT=8082 >> .env
+          echo INTERNAL_BOT_ADDRESS=http://localhost:8083 >> .env
           echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
           echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID }} >> .env
           echo AUTH_SECRET=${{ secrets.AUTH_SECRET }} >> .env
@@ -43,12 +45,12 @@ jobs:
         run: tar -czf ../dist.tar.gz ../*
 
       - name: Copy build to remote
-        run: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ../dist.tar.gz home-server@ironicpickle.uk:/home/home-server/claudia/claudia-bot
+        run: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ../dist.tar.gz home-server@ironicpickle.uk:/home/home-server/claudia/staging/claudia-bot
 
       - name: Deploy to remote
         run: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null home-server@ironicpickle.uk "\
-            cd /home/home-server/claudia/claudia-bot
+            cd /home/home-server/claudia/staging/claudia-bot
             rm ./dist -rf && \
             mkdir ./dist && \
             tar -xzf dist.tar.gz -C ./dist && \
