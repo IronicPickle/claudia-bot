@@ -1,8 +1,8 @@
-name: Staging Deployment
+name: Production Deployment
 on:
   push:
     branches:
-      - staging
+      - master
 
 jobs:
   deploy:
@@ -27,13 +27,13 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Initialise Environment
-        run: ./init.sh staging ${{ secrets.DEPLOYMENT_USERNAME }} ${{ secrets.DEPLOYMENT_TOKEN }}
+        run: ./init.sh master ${{ secrets.DEPLOYMENT_USERNAME }} ${{ secrets.DEPLOYMENT_TOKEN }}
 
       - name: Inject env vars
         run: |
           echo DENO_ENV=development > .env
-          echo OAK_PORT=8083 >> .env
-          echo INTERNAL_BOT_ADDRESS=http://localhost:8082 >> .env
+          echo OAK_PORT=8081 >> .env
+          echo INTERNAL_BOT_ADDRESS=http://localhost:8080 >> .env
           echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN_STAGING }} >> .env
           echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID_STAGING }} >> .env
           echo AUTH_SECRET=${{ secrets.AUTH_SECRET }} >> .env
@@ -45,14 +45,14 @@ jobs:
         run: tar -czf ../dist.tar.gz ../*
 
       - name: Copy build to remote
-        run: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ../dist.tar.gz home-server@ironicpickle.uk:/home/home-server/claudia/staging/claudia-bot
+        run: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ../dist.tar.gz home-server@ironicpickle.uk:/home/home-server/claudia/production/claudia-bot
 
       - name: Deploy to remote
         run: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null home-server@ironicpickle.uk "\
-            cd /home/home-server/claudia/staging/claudia-bot
+            cd /home/home-server/claudia/production/claudia-bot
             rm ./dist -rf && \
             mkdir ./dist && \
             tar -xzf dist.tar.gz -C ./dist && \
             rm dist.tar.gz && \
-            systemctl --user restart claudia-bot-staging"
+            systemctl --user restart claudia-bot-production"
