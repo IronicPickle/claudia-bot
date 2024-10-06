@@ -1,6 +1,6 @@
 import { Bot, Guild, Member } from "discordeno";
 
-export interface CacheGuild extends Guild {
+export interface CacheGuild extends Omit<Guild, "members"> {
   members: Record<string, Member>;
 }
 

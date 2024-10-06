@@ -4,6 +4,7 @@ import { log } from "@utils/generic.ts";
 import { GuildConfig } from "@bot/managers/BotConfigManager.ts";
 import { bot } from "@bot/setupBot.ts";
 import { isResError } from "@shared/lib/utils/api.ts";
+import { CacheGuild } from "@bot/wrappers/cacheWrapper.ts";
 
 export default () => {
   bot.eventManager.addEventListener("guildDelete", async (_bot, id) => {
@@ -27,7 +28,7 @@ const updateCache = (guildId: string) => {
   delete bot.cache.guilds[guildId];
 };
 
-const updateGuild = async (guild: Guild, guildConfig: GuildConfig) => {
+const updateGuild = async (guild: CacheGuild, guildConfig: GuildConfig) => {
   log(`Bot left guild: '${guild.id}', updating...`);
 
   // Update config
@@ -37,7 +38,7 @@ const updateGuild = async (guild: Guild, guildConfig: GuildConfig) => {
   await update(guild);
 };
 
-const update = async (guild: Guild) => {
+const update = async (guild: CacheGuild) => {
   const res = await Endpoints.internal.discord.guilds.update.call({
     params: {
       guildId: guild.id.toString(),

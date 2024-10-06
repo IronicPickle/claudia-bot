@@ -6,10 +6,11 @@ import {
 } from "@shared/lib/api/server/internal/discord/dbSpec.ts";
 import { Guild, Member } from "discordeno";
 import { bot } from "@bot/setupBot.ts";
+import { CacheGuild } from "@bot/wrappers/cacheWrapper.ts";
 
 export default class DbTransformer {
   static guild(
-    guild: Guild,
+    guild: Guild | CacheGuild,
     members: Member[],
     active: boolean
   ): DbDiscordGuild {
