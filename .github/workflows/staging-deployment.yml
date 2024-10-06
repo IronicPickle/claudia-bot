@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: staging
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
@@ -34,9 +35,9 @@ jobs:
           echo DENO_ENV=development > .env
           echo OAK_PORT=8093 >> .env
           echo INTERNAL_BOT_ADDRESS=http://localhost:8092 >> .env
-          echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN_STAGING }} >> .env
-          echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID_STAGING }} >> .env
-          echo AUTH_SECRET=${{ secrets.AUTH_SECRET_STAGING }} >> .env
+          echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
+          echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID }} >> .env
+          echo AUTH_SECRET=${{ secrets.AUTH_SECRET }} >> .env
 
       - name: Check Application
         run: ./check.sh
