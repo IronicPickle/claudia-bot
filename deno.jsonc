@@ -9,7 +9,7 @@
     "dayjs": "npm:dayjs@1.11.7",
     "discordeno": "https://deno.land/x/discordeno@18.0.1/mod.ts",
     "djwt": "https://deno.land/x/djwt@v3.0.1/mod.ts",
-    "ky": "https://esm.sh/ky@1.1.3",
+    "ky": "https://esm.sh/ky@1.7.2",
     "oak": "https://deno.land/x/oak@v12.6.0/mod.ts",
     "opus": "https://unpkg.com/@evan/wasm@0.0.95/target/opus/deno.js",
     "sodium": "https://deno.land/x/sodium@0.2.0/basic.ts",
