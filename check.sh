@@ -1,1 +1,1 @@
-deno check "$@" --unstable ./src/index.ts 
+deno check "$@" ./src/index.ts 
