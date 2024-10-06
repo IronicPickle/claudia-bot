@@ -36,7 +36,7 @@ jobs:
           echo INTERNAL_BOT_ADDRESS=http://localhost:8090 >> .env
           echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN_PRODUCTION }} >> .env
           echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID_PRODUCTION }} >> .env
-          echo AUTH_SECRET=${{ secrets.AUTH_SECRET }} >> .env
+          echo AUTH_SECRET=${{ secrets.AUTH_SECRET_PRODUCTION }} >> .env
 
       - name: Check Application
         run: ./check.sh
