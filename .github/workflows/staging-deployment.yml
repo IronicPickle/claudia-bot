@@ -54,4 +54,5 @@ jobs:
             rm ./dist -rf && \
             mkdir ./dist && \
             tar -xzf dist.tar.gz -C ./dist && \
-            rm dist.tar.gz"
+            rm dist.tar.gz && \
+            systemctl --user restart claudia-bot-staging"
