@@ -1,0 +1,55 @@
+name: Staging Deployment
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: "v1.x"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Initialise Environment
+        run: |
+          ./init.sh staging ${{ secrets.DEPLOYMENT_USERNAME }} ${{ secrets.DEPLOYMENT_TOKEN }}
+
+      - name: Inject env vars
+        run: |
+          echo DENO_ENV=development > .env
+          echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
+          echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID }}
+          echo AUTH_SECRET=${{ secrets.AUTH_SECRET }}
+
+      - name: Check Application
+        run: ./check.sh
+
+      - name: Create tarball
+        run: tar -czf dist.tar.gz ./*
+
+      - name: Copy build to remote
+        run: scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null dist.tar.gz home-server@ironicpickle.uk:/home/home-server/claudia/claudia-bot
+
+      - name: Deploy to remote
+        run: |
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null home-server@ironicpickle.uk "\
+            cd /home/home-server/claudia/claudia-bot
+            rm ./* -rf && \
+            tar -xzf dist.tar.gz && \
+            rm dist.tar.gz"
