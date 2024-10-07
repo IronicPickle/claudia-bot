@@ -1,4 +1,6 @@
 .env
+.staging.env
+.production.env
 /src/data/
 *.mp3
 *.mp4

@@ -45,6 +45,11 @@ printf "\n\\e[1m> Installing \e[33mclaudia-bot\e[0m\e[1m environment\e[0m\n\n"
 
 printf "\nCreating python virtual environment\n"
 python3 -m venv .venv
+source .venv/bin/activate
+pip3 install yt-dlp
+pip3 install scdl
+pip3 install spotdl
+deactivate
 
 if [ ! -e .env ]; then
   printf "Generating .env file"
