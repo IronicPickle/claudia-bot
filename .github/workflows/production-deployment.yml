@@ -62,4 +62,4 @@ jobs:
             source .venv/bin/activate && \
             pip3 install -r requirements.txt && \
             deactivate && \
-            systemctl --user restart claudia-bot-production"
+            sudo systemctl restart claudia-bot-production"
