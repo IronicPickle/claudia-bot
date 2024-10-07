@@ -56,7 +56,7 @@ jobs:
             mkdir ./dist && \
             tar -xzf dist.tar.gz -C ./dist && \
             rm dist.tar.gz && \
-            cd /home/home-server/claudia/staging/claudia-bot/dist/claudia-bot && \
+            cd /home/home-server/claudia/production/claudia-bot/dist/claudia-bot && \
             python3 -m venv .venv && \
             source .venv/bin/activate && \
             pip3 install -r requirements.txt && \
