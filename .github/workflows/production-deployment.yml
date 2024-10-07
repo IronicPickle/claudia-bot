@@ -28,7 +28,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Initialise Environment
-        run: ./init.sh master ${{ secrets.DEPLOYMENT_USERNAME }} ${{ secrets.DEPLOYMENT_TOKEN }}
+        run: ./init.sh master ${{ secrets.DEPLOYMENT_USERNAME }} ${{ secrets.DEPLOYMENT_TOKEN }} true
 
       - name: Inject env vars
         run: |
@@ -56,4 +56,9 @@ jobs:
             mkdir ./dist && \
             tar -xzf dist.tar.gz -C ./dist && \
             rm dist.tar.gz && \
+            cd /home/home-server/claudia/staging/claudia-bot/dist/claudia-bot && \
+            python3 -m venv .venv && \
+            source .venv/bin/activate && \
+            pip3 install -r requirements.txt && \
+            deactivate && \
             systemctl --user restart claudia-bot-production"
