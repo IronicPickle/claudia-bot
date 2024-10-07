@@ -33,6 +33,7 @@ jobs:
       - name: Inject env vars
         run: |
           echo DENO_ENV=development > .env
+          echo DATA_DIR=../../../data >> .env
           echo OAK_PORT=8093 >> .env
           echo INTERNAL_SERVER_ADDRESS=http://localhost:8092 >> .env
           echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
