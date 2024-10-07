@@ -34,7 +34,7 @@ jobs:
         run: |
           echo DENO_ENV=development > .env
           echo OAK_PORT=8091 >> .env
-          echo INTERNAL_BOT_ADDRESS=http://localhost:8090 >> .env
+          echo INTERNAL_SERVER_ADDRESS=http://localhost:8090 >> .env
           echo DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }} >> .env
           echo DISCORD_BOT_ID=${{ secrets.DISCORD_BOT_ID }} >> .env
           echo AUTH_SECRET=${{ secrets.AUTH_SECRET }} >> .env
