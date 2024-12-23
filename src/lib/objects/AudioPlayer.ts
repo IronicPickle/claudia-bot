@@ -26,6 +26,8 @@ export default class AudioPlayer extends EventManager<{
   userJoin: () => void;
   userLeave: () => void;
 }> {
+  private static LEAVE_TIMEOUT_MS = 1000 * 60 * 5;
+
   private bot: Bot & AudioBot;
 
   public readonly stream: AudioStream;
@@ -55,6 +57,8 @@ export default class AudioPlayer extends EventManager<{
   private isSpeaking = false;
 
   private broadcastChannelId?: bigint;
+
+  private leaveTimeout?: number;
 
   constructor(bot: Bot & AudioBot, stream: AudioStream, guildId: bigint) {
     super();
@@ -270,12 +274,18 @@ export default class AudioPlayer extends EventManager<{
           "UDP",
           `Prepared empty packet ${this.emptyFramesPrepared}`
         );
+
+        if (this.emptyFramesPrepared === 5) {
+          if (this.isSpeaking) this.ws.speaking(false);
+          this.startLeaveTimeout();
+          return;
+        }
       } else {
-        if (this.isSpeaking) this.ws.speaking(false);
         return;
       }
     } else {
       if (!this.isSpeaking) this.ws.speaking(true);
+      this.cancelLeaveTimeout();
     }
 
     this.sequence++;
@@ -330,6 +340,22 @@ export default class AudioPlayer extends EventManager<{
     }
   }
 
+  private cancelLeaveTimeout() {
+    if (this.leaveTimeout) clearTimeout(this.leaveTimeout);
+  }
+
+  private startLeaveTimeout() {
+    this.cancelLeaveTimeout();
+    this.leaveTimeout = setTimeout(() => {
+      AudioPlayer.log("WS", "Leave timeout reached, disconnecting bot...");
+      this.broadcast({
+        content:
+          "Nobody has used me in a while, I'm going leave...\nUse `/join` or `/play` to bring me back!",
+      });
+      this.leaveChannel();
+    }, AudioPlayer.LEAVE_TIMEOUT_MS);
+  }
+
   public async joinChannel(bot: Bot, channelId: bigint) {
     if (this.getVoiceUserChannel(bot.id) === channelId) return;
     this.resetSession();
@@ -337,6 +363,7 @@ export default class AudioPlayer extends EventManager<{
   }
 
   public async leaveChannel() {
+    this.cancelLeaveTimeout();
     await this.bot.helpers.leaveVoiceChannel(this.guildId);
   }
 
@@ -482,6 +509,7 @@ export default class AudioPlayer extends EventManager<{
         this.heartbeatInterval = heartbeat_interval - 100;
 
         this.startHeartbeat();
+        this.startLeaveTimeout();
 
         break;
       }

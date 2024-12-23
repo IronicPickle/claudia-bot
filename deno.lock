@@ -550,8 +550,8 @@
     "https://deno.land/x/sodium@0.2.0/basic.ts": "458ec1e8e90b5df3c0d8a7a7e4747dbbbd35e3ee776ac4dc7c44d3ec70784de9",
     "https://deno.land/x/sodium@0.2.0/basic_types.ts": "49e32fd3d239e183d71e2509def40a70ce0308f4d9f0552dd355be8094e2fe5f",
     "https://deno.land/x/sodium@0.2.0/dist/browsers/sodium.js": "169e09bb1d056fd4700c95edbdb399d8050d685ce44b40f520e35a021167d520",
-    "https://esm.sh/ky@1.1.3": "9c3657c82f0ae330eaec2ad3c27bc9ee2e0b947f3a723673212d21988ba53325",
-    "https://esm.sh/v133/ky@1.1.3/denonext/ky.mjs": "6babfbef9debcf3a28dda275c0c477206002c82635f8ef9a3173ae69002f25f6",
+    "https://esm.sh/ky@1.7.2": "5238ce1d59e224c5ac583a5d5a77f455d74860cbdc54f09bc170c7469983b7d5",
+    "https://esm.sh/v135/ky@1.7.2/denonext/ky.mjs": "b5a85e5c12a91004096c4acf413d55cbc659139fb95455136aebcb73916ef95c",
     "https://unpkg.com/@evan/wasm@0.0.93/target/ed25519/deno.js": "9728126890f17b71cee41afdab8a4bc362f6b9f409fe0a5c4f6ca9f3b510fd3a",
     "https://unpkg.com/@evan/wasm@0.0.94/target/zlib/deno.js": "e65131e1c1f45e64960f2699a0b868927ea5c9201c4b986a7cfc57b18be5cc09",
     "https://unpkg.com/@evan/wasm@0.0.95/target/opus/deno.js": "af5c2299afd23581384a319b71a36bed491aad3e98c2a13dd2f445e7b8aace5f"
