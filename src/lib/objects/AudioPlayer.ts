@@ -280,6 +280,8 @@ export default class AudioPlayer extends EventManager<{
           this.startLeaveTimeout();
           return;
         }
+      } else {
+        return;
       }
     } else {
       if (!this.isSpeaking) this.ws.speaking(true);
