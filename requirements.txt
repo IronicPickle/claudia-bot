@@ -47,5 +47,5 @@ urllib3==2.4.0
 uvicorn==0.23.2
 websockets==14.2
 wrapt==1.17.2
-yt-dlp==2025.6.30
+yt-dlp==2025.10.14
 ytmusicapi==1.10.3
